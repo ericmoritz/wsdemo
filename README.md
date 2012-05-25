@@ -11,12 +11,12 @@ Compile:
 
     ./rebar get-deps compile
 
-Start Server:
+Start the server:
       
       erl -pa ebin deps/*/ebin
       1> wsdemo:start(8000).
 
-Follow the instructions in Part One of the Million-user Comet Application
+Follow the instructions in Part One of the [Million-user Comet Application](http://www.metabrew.com/article/a-million-user-comet-application-with-mochiweb-part-1)
 to increase your available connection counts.
 
 Start floodtest:
