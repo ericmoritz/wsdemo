@@ -13,7 +13,8 @@ Compile:
 
 Start Server:
       
-      erl -pa ebin deps/*/ebin -s wsdemo
+      erl -pa ebin deps/*/ebin
+      1> wsdemo:start(8000).
 
 Follow the instructions in Part One of the Million-user Comet Application
 to increase your available connection counts.
