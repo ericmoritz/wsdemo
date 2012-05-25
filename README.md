@@ -31,5 +31,5 @@ Start floodtest:
       erl -pa ebin 
       1> wsdemo_stats:start("localhost", 8000, 10000).
 
-That will run forever.
+You will see the stats printed out as with the part one of C1M Comet demo.
 
