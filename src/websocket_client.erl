@@ -1,3 +1,7 @@
+%%
+%% This is a really basic client that works with Cowboy
+%% Derived from https://github.com/davebryson/erlang_websocket
+%%
 %% 
 %% Basic implementation of the WebSocket API:
 %% http://dev.w3.org/html5/websockets/
