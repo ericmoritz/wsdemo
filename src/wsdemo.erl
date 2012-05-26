@@ -27,12 +27,10 @@ websocket_init(_TransportName, Req, State) ->
     {ok, Req, State}.
 
 websocket_handle(Msg, Req, State) ->
-    io:format("Got: ~p~n", [Msg]),
     {reply, Msg, Req, State}.
 
 websocket_info({timeout, _Ref, Msg}, Req, State) ->
     erlang:start_timer(1000, self(), "tick"),
-    io:format("Timeout: ~p~n", [Msg]),
     {reply, {text, Msg}, Req, State}.
 
 websocket_terminate(_Reason, _Req, _State) ->
