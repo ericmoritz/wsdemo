@@ -20,10 +20,10 @@ ws_onopen(StatsPid) ->
     StatsPid.
 
 ws_onmessage(Msg, StatsPid) ->
-    StatsPid ! {websocket, self(), onmessage},
+    StatsPid ! {websocket, self(), onmessage, Msg},
     StatsPid.
 
-ws_info(Msg, StatsPid) ->
+ws_info(_Msg, StatsPid) ->
     StatsPid ! {websocket, self(), info},
     StatsPid.
 

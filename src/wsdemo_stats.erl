@@ -29,7 +29,7 @@ recv(Stats) ->
     end,
     receive
         {websocket,_Pid,onopen}    -> recv({Active+1, Closed,  Messages});
-        {websocket,_Pid,onmessage} -> recv({Active,   Closed,  Messages+1});
+        {websocket,_Pid,onmessage, _} -> recv({Active,   Closed,  Messages+1});
         {websocket,_Pid,onclose}   -> recv({Active-1, Closed+1,Messages})
     after 0 ->
             recv({Active, Closed, Messages})
