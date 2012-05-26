@@ -12,7 +12,8 @@ server.listen(8000, function() {
 });
 
 wsServer = new WebSocketServer({
-  httpServer: server
+  httpServer: server,
+  dropConnectionOnKeepaliveTimeout: false
 });
 
 wsServer.on("request", function(request) {
