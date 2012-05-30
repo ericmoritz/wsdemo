@@ -74,7 +74,7 @@ handle_cast(close,State) ->
     {stop,normal,State1}.
 
 %% Start handshake
-handle_info({http,Socket,{http_response,{1,1},101,"Switching Protocols"}}, State) ->
+handle_info({http,Socket,{http_response,{1,1},101,_Status}}, State) ->
     State1 = State#state{readystate=?CONNECTING,socket=Socket},
     {noreply, State1};
 %% Extract the headers
