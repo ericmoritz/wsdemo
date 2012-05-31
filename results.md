@@ -19,7 +19,7 @@ is opened and the handshake is finished.
 ### latency
 
 Each client sends a message with a timestamp every second and waits for the server to echo that message.  When the
-message is received, the client records the elapsed time. This elapsed time is collected in the latency stat.
+message is received, the client records the elapsed microseconds. This elapsed time is collected in the latency stat.
 
 ### connections
 
