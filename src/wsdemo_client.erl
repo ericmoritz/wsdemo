@@ -8,6 +8,10 @@
 
 -record(state, {start_time}).
 
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+-endif.
+
 start_link() ->
     start_link("localhost", 8000).
 
@@ -18,10 +22,10 @@ start_link(Host, Port, Path) ->
     websocket_client:start_link(?MODULE, Host, Port, Path).
 
 ws_init() ->
-    #state{start_time=get_timestamp()}.
+    #state{start_time=erlang:now()}.
 
 ws_onopen(_Client, #state{start_time=TS} = State) ->
-    Elapsed = get_timestamp() - TS,
+    Elapsed = timer:now_diff(erlang:now(), TS),
     folsom_metrics:notify({connection_time, Elapsed}),
     folsom_metrics:notify({connections, {inc, 1}}),
     folsom_metrics:notify({active, {inc, 1}}),
@@ -38,8 +42,10 @@ handle_msg(_Client, {text,<<"tick">>}, State) ->
     folsom_metrics:notify({ticks, {inc, 1}}),
     folsom_metrics:notify({tick_rate, 1}),
     State;
-handle_msg(Client, {binary, <<"ping:",TS:64/integer>>}, State) ->
-    Elapsed = get_timestamp() - TS,
+handle_msg(_Client, {binary, <<"ping:",NowBytes/bits>>}, State) ->
+    End = erlang:now(),
+    Start = decode_now(NowBytes),
+    Elapsed = timer:now_diff(End, Start),
     folsom_metrics:notify({latency, Elapsed}),
     State;
 handle_msg(_Client, Msg, State) ->
@@ -47,8 +53,8 @@ handle_msg(_Client, Msg, State) ->
     State.
 
 ws_info(Client, {timeout, _Ref, send_ping}, State) ->
-    TS = get_timestamp(),
-    Data = <<"ping:", TS:64/integer>>,
+    TS = encode_now(erlang:now()),
+    Data = <<"ping:", TS/binary>>,
     websocket_client:write_sync(Client, {binary,Data}),
     % queue up the next send_ping message
     erlang:start_timer(0, self(), send_ping),
@@ -60,5 +66,18 @@ ws_onclose(Client, State) ->
     folsom_metrics:notify({disconnections, {inc, 1}}),
     State.
 
-get_timestamp() ->
-    folsom_utils:now_epoch_micro().
+encode_now({MegaSecs, Secs, MicroSecs}) ->
+    <<MegaSecs:32, Secs:32, MicroSecs:32>>.
+
+decode_now(<<MegaSecs:32, Secs:32, MicroSecs:32>>) ->
+    {MegaSecs, Secs, MicroSecs}.
+
+-ifdef(TEST).
+
+decode_now_test_() ->
+    Now = {1338,474888,611762},
+    [
+     ?_assertEqual(Now, decode_now(encode_now(Now)))
+     ].
+
+-endif.

@@ -170,14 +170,13 @@ unframe(<<_Fin:1, _RSV:3, OpCode:4, _Mask:1, Len:7, Payload:Len/bytes, Rest/bina
 unframe(<<_Fin:1, _RSV:3, OpCode:4, _Mask:1, 126:7, Len:16, Payload:Len/bytes, Rest/binary>>) when Len > 125 ->
     {ok, payload(OpCode, Payload), Rest};
 %% 7+16 bits payload incomplete, keep reading
-unframe(<<_Fin:1, _RSV:3, OpCode:4, _Mask:1, 126:7, Rest/binary>> = Data) ->
+unframe(<<_Fin:1, _RSV:3, _OpCode:4, _Mask:1, 126:7, _Rest/binary>> = Data) ->
     {continue, Data};
 %% 7+64 bits payload prefix exists
 unframe(<< _Fin:1, _Rsv:3, OpCode:4, _Mask:1, 127:7, 0:1, Len:63, Payload:Len/bytes, Rest/bits >>) when Len > 16#FFFF ->
-    <<Payload:Len, SoFar/bits>> = Rest,
-    {ok, payload(OpCode, Rest), Rest};
+    {ok, payload(OpCode, Payload), Rest};
 %% 7+64 bits payload prefix incomplete, keep reading
-unframe(<< _Fin:1, _Rsv:3, _Opcode:4, _Mask:1, 127:7, Rest/bits>> = Data) ->
+unframe(<< _Fin:1, _Rsv:3, _Opcode:4, _Mask:1, 127:7, _Rest/bits>> = Data) ->
     {continue, Data};
 %% invalid frame, give up.
 unframe(_Data) ->
