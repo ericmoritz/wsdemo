@@ -35,8 +35,7 @@ Total number of messages received by the clients
 
 ### ticks
 
-Number of ticks received by the clients.  ticks are sent every second per
-connection.
+Number of ticks received by the clients.  ticks are sent every second by the server for each connection.
 
 ## crashes
 
