@@ -17,7 +17,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/4,start_link/5,write/2,close/1]).
+-export([start_link/3,start_link/4,write/2,write_sync/2,close/1, frame/1, websocket_mask/2]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -32,39 +32,43 @@
 -export([behaviour_info/1]).
 
 behaviour_info(callbacks) ->
-    [{ws_onopen,1}, {ws_onmessage,2}, {ws_info,2}, {ws_onclose,1}];
+    [{ws_init,0}, {ws_onopen,2}, {ws_onmessage,3}, {ws_info,3}, {ws_onclose,2}];
 behaviour_info(_) ->
     undefined.
 
 -record(state, {socket,readystate=undefined,headers=[],callback, callback_state,
-               framebuffer}).
+                host, port, path,
+                sofar = <<>>}).
 
-start_link(Host,Port,Mod,ModState) ->
-    start_link(Host,Port,"/",Mod,ModState).
+start_link(Mod,Host,Port) ->
+    start_link(Mod, Host,Port,"/").
   
-start_link(Host,Port,Path,Mod,ModState) ->
-    gen_server:start_link(?MODULE, [{Host,Port,Path,Mod,ModState}], []).
+start_link(Mod,Host,Port,Path) ->
+    gen_server:start_link(?MODULE, [Mod,Host,Port,Path], []).
 
-init(Args) ->
-    process_flag(trap_exit,true),
-    [{Host,Port,Path,Mod,ModState}] = Args,
+init([Mod,Host,Port,Path]) ->
+    ModState = Mod:ws_init(),
     {ok, Sock} = gen_tcp:connect(Host,Port,[binary,{packet, http},{active,true}]),
     Req = initial_request(Host,Path),
     ok = gen_tcp:send(Sock,Req),
     inet:setopts(Sock, [{packet, http}]),
-    {ok,#state{socket=Sock,callback=Mod,callback_state=ModState}}.
+    {ok,#state{socket=Sock, callback=Mod, callback_state=ModState}}.
 
 
 %% Write to the server
 write(Pid, Data) ->
     gen_server:cast(Pid,{send,Data}).
 
+write_sync(ClientState, Data) ->
+    Frame = frame(Data),
+    gen_tcp:send(ClientState#state.socket, Frame).
+
 %% Close the socket
 close(Pid) ->
     gen_server:cast(Pid,close).
 
 handle_cast({send,Data}, State) ->
-    gen_tcp:send(State#state.socket,[0] ++ Data ++ [255]),
+    write_sync(State, Data),
     {noreply, State};
 handle_cast(close,State) ->
     Mod = State#state.callback,
@@ -99,7 +103,7 @@ handle_info({http,Socket,http_eoh},State) ->
                     inet:setopts(Socket, [{packet, raw}]),
                     State1 = State#state{readystate=?OPEN,socket=Socket},
                     Mod = State#state.callback,
-                    CBState = Mod:ws_onopen(State#state.callback_state),
+                    CBState = Mod:ws_onopen(State, State#state.callback_state),
                     {noreply,State1#state{callback_state=CBState}};
                 _Any  ->
                     {stop,error,State}
@@ -109,26 +113,29 @@ handle_info({http,Socket,http_eoh},State) ->
             {stop,{error, {http_eoh, unexpected_readystate, Other}},State}
     end;
 %% Handshake complete, handle packets
-handle_info({tcp, _Socket, Data}, #state{callback=Mod} = State) ->
+handle_info({tcp, _Socket, Data}, #state{callback=Mod, sofar=SoFar} = State) ->
     case State#state.readystate of
         ?OPEN ->
-            {ok, Frame} = unframe(Data),
-            CBState = Mod:ws_onmessage(Frame, State#state.callback_state),
-            {noreply, State#state{callback_state=CBState}};
+            State2 = case unframe(<<SoFar/bits, Data/bits>>) of
+                         {ok, Frame, SoFar2} ->
+                             CBState = Mod:ws_onmessage(State, Frame, State#state.callback_state),
+                             State#state{callback_state=CBState, sofar=SoFar2};
+                         {continue, SoFar2} ->
+                             State#state{sofar=SoFar2}
+                     end,
+            {noreply, State2};
         Other ->
             {stop,{error, {tcp_data, unexpected_readystate, {Other, Data}}},State}
     end;
 handle_info({tcp_closed, _Socket},State) ->
     Mod = State#state.callback,
-    CBState = Mod:ws_onclose(State#state.callback_state),
+    CBState = Mod:ws_onclose(State, State#state.callback_state),
     {stop,normal,State#state{callback_state=CBState}};
 handle_info({tcp_error, _Socket, _Reason},State) ->
     {stop,tcp_error,State};
-handle_info({'EXIT', _Pid, _Reason},State) ->
-    {noreply,State};
 handle_info(Msg, State) ->
     Mod = State#state.callback,
-    CBState = Mod:ws_info(Msg, State#state.callback_state),
+    CBState = Mod:ws_info(State, Msg, State#state.callback_state),
     {noreply, State#state{callback_state=CBState}}.
   
 handle_call(_Request,_From,State) ->
@@ -153,12 +160,79 @@ initial_request(Host,Path) ->
     "Origin: http://" ++ Host ++ "/\r\n\r\n" ++
     "draft-hixie: 68".
 
-unframe(<<Fin:1, RSV:3, OpCode:4, Mask:1, Len:7, Payload/binary>>) ->
+%% not enough data for a complete frame
+unframe(Data) when byte_size(Data) =:= 1 ->
+    {continue, Data};
+%% 7 bit payload frame
+unframe(<<_Fin:1, _RSV:3, OpCode:4, _Mask:1, Len:7, Payload:Len/bytes, Rest/binary>>) when Len < 126 ->
+    {ok, payload(OpCode, Payload), Rest};
+%% 7+16 bits payload prefix exists
+unframe(<<_Fin:1, _RSV:3, OpCode:4, _Mask:1, 126:7, Len:16, Payload:Len/bytes, Rest/binary>>) when Len > 125 ->
+    {ok, payload(OpCode, Payload), Rest};
+%% 7+16 bits payload incomplete, keep reading
+unframe(<<_Fin:1, _RSV:3, OpCode:4, _Mask:1, 126:7, Rest/binary>> = Data) ->
+    {continue, Data};
+%% 7+64 bits payload prefix exists
+unframe(<< _Fin:1, _Rsv:3, OpCode:4, _Mask:1, 127:7, 0:1, Len:63, Payload:Len/bytes, Rest/bits >>) when Len > 16#FFFF ->
+    <<Payload:Len, SoFar/bits>> = Rest,
+    {ok, payload(OpCode, Rest), Rest};
+%% 7+64 bits payload prefix incomplete, keep reading
+unframe(<< _Fin:1, _Rsv:3, _Opcode:4, _Mask:1, 127:7, Rest/bits>> = Data) ->
+    {continue, Data};
+%% invalid frame, give up.
+unframe(_Data) ->
+    {error, badframe}.
+
+payload(OpCode, Payload) ->
     Type = case OpCode of
                1  -> text;
                2  -> binary;
                9  -> ping;
                10 -> pong
            end,
-    % This is incomplete, PayloadLen can be larger
-    {ok, {Type, Payload}}.
+    {Type, Payload}.
+
+frame({Type, Data}) ->
+    Opcode = case Type of
+                 text ->
+                     1;
+                 binary -> 2;
+                 ping -> 9;
+                 pong -> 10
+             end,
+
+    <<MaskKey:32>> = <<1:32>>,
+    Len = hybi_payload_length(iolist_size(Data)),
+
+    MaskedData = websocket_mask(Data, MaskKey),
+    Payload = <<MaskKey:32,MaskedData/binary>>,
+    << 1:1, 0:3, Opcode:4, 1:1, Len/bits, Payload/bits>>.
+
+hybi_payload_length(N) ->
+	case N of
+		N when N =< 125 -> << N:7 >>;
+		N when N =< 16#ffff -> << 126:7, N:16 >>;
+		N when N =< 16#7fffffffffffffff -> << 127:7, N:64 >>
+	end.
+
+websocket_mask(Payload, MaskKey) ->
+	websocket_mask(Payload, MaskKey, <<>>).
+
+websocket_mask(<< O:32, Rest/bits >>, MaskKey, Acc) ->
+    T = O bxor MaskKey,
+    websocket_mask(Rest, MaskKey, << Acc/binary, T:32 >>);
+websocket_mask(<< O:24 >>, MaskKey, Acc) ->
+    << MaskKey2:24, _:8 >> = << MaskKey:32 >>,
+    T = O bxor MaskKey2,
+    << Acc/binary, T:24 >>;
+websocket_mask(<< O:16 >>, MaskKey, Acc) ->
+    << MaskKey2:16, _:16 >> = << MaskKey:32 >>,
+    T = O bxor MaskKey2,
+    << Acc/binary, T:16 >>;
+websocket_mask(<< O:8 >>, MaskKey, Acc) ->
+    << MaskKey2:8, _:24 >> = << MaskKey:32 >>,
+    T = O bxor MaskKey2,
+    << Acc/binary, T:8 >>;
+websocket_mask(<<>>, _MaskKey, Acc) ->
+    Acc.
+
