@@ -57,7 +57,7 @@ ws_info(Client, {timeout, _Ref, send_ping}, State) ->
     Data = <<"ping:", TS/binary>>,
     websocket_client:write_sync(Client, {binary,Data}),
     % queue up the next send_ping message
-    erlang:start_timer(0, self(), send_ping),
+    erlang:start_timer(1000, self(), send_ping),
     State.
 
 ws_onclose(Client, State) ->
