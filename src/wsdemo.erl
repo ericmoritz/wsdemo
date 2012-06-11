@@ -23,15 +23,13 @@ init({tcp, http}, _Req, _Opts) ->
     {upgrade, protocol, cowboy_http_websocket}.
 
 websocket_init(_TransportName, Req, State) ->
-    erlang:start_timer(1000, self(), "tick"),
     {ok, Req, State, hibernate}.
 
 websocket_handle(Msg, Req, State) ->
     {reply, Msg, Req, State, hibernate}.
 
-websocket_info({timeout, _Ref, Msg}, Req, State) ->
-    erlang:start_timer(1000, self(), "tick"),
-    {reply, {text, Msg}, Req, State, hibernate}.
+websocket_info(_Msg, Req, State) ->
+    {ok, Req, State, hibernate}.
 
 websocket_terminate(_Reason, _Req, _State) ->
     ok.
