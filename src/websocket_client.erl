@@ -48,7 +48,7 @@ start_link(Mod,Host,Port,Path) ->
 
 init([Mod,Host,Port,Path]) ->
     ModState = Mod:ws_init(),
-    {ok, Sock} = gen_tcp:connect(Host,Port,[binary,{packet, http},{active,true}]),
+    {ok, Sock} = gen_tcp:connect(Host,Port,[binary,{packet, http},{active,true}], 1000),
     Req = initial_request(Host,Path),
     ok = gen_tcp:send(Sock,Req),
     inet:setopts(Sock, [{packet, http}]),
@@ -157,8 +157,7 @@ initial_request(Host,Path) ->
     "Sec-WebSocket-Key: x3JJHMbDL1EzLkh9GBhXDw==\r\n" ++
     "Sec-WebSocket-Protocol: chat\r\n" ++
     "Sec-WebSocket-Version: 13\r\n" ++
-    "Origin: http://" ++ Host ++ "/\r\n\r\n" ++
-    "draft-hixie: 68".
+    "Origin: http://" ++ Host ++ "/\r\n\r\n".
 
 %% not enough data for a complete frame
 unframe(Data) when byte_size(Data) =:= 1 ->
@@ -187,6 +186,7 @@ payload(OpCode, Payload) ->
                1  -> text;
                2  -> binary;
                9  -> ping;
+               8  -> close;
                10 -> pong
            end,
     {Type, Payload}.
