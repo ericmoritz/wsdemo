@@ -36,12 +36,6 @@ ws_onmessage(Client, Msg, State) ->
     folsom_metrics:notify({messages, {inc, 1}}),
     handle_msg(Client, Msg, State).
 
-handle_msg(Client, {binary, <<"tick">>}, State) ->
-    handle_msg(Client, {text, <<"tick">>}, State);
-handle_msg(_Client, {text,<<"tick">>}, State) ->
-    folsom_metrics:notify({ticks, {inc, 1}}),
-    folsom_metrics:notify({tick_rate, 1}),
-    State;
 handle_msg(Client, {text, <<"ping:",_/bits>> = Msg}, State) ->
     % rewrite the text message as a binary message
     handle_msg(Client, {binary, Msg}, State);
