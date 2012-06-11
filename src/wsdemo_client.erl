@@ -42,6 +42,9 @@ handle_msg(_Client, {text,<<"tick">>}, State) ->
     folsom_metrics:notify({ticks, {inc, 1}}),
     folsom_metrics:notify({tick_rate, 1}),
     State;
+handle_msg(Client, {text, <<"ping:",_/bits>> = Msg}, State) ->
+    % rewrite the text message as a binary message
+    handle_msg(Client, {binary, Msg}, State);
 handle_msg(_Client, {binary, <<"ping:",NowBytes/bits>>}, State) ->
     End = erlang:now(),
     Start = decode_now(NowBytes),
@@ -55,7 +58,7 @@ handle_msg(_Client, Msg, State) ->
 ws_info(Client, {timeout, _Ref, send_ping}, State) ->
     TS = encode_now(erlang:now()),
     Data = <<"ping:", TS/binary>>,
-    websocket_client:write_sync(Client, {binary,Data}),
+    websocket_client:write_sync(Client, {binary, Data}),
     % queue up the next send_ping message
     erlang:start_timer(1000, self(), send_ping),
     State.
