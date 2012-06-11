@@ -19,13 +19,6 @@ wsServer = new WebSocketServer({
 wsServer.on("request", function(request) {
   var connection = request.accept(null, request.origin);
 
-  function tick() {
-    connection.sendUTF("tick");
-    setTimeout(tick, 1000);
-  }
-
-  setTimeout(tick, 1000);
-  
   connection.on("message", function(message) {
     if (message.type === 'utf8') {
       connection.sendUTF(message.utf8Data);
