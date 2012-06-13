@@ -13,7 +13,7 @@ After 5 minutes of running, the following stats are outputed.
 ### connection_time
 
 Elapsed time in microseconds between the opening of the client TCP socket
-is opened and the handshake is finished.
+and the websocket handshake is finished.
 
 ### latency
 
