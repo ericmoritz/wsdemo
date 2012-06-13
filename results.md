@@ -76,7 +76,7 @@ Number of crashed clients from a reason other than timeout
     <th>Connection Time (mean)</th>
     <th>Latency (mean)</th>
     <th>Messages</th>
-    <th>Timeouts</th>
+    <th>Connection Timeouts</th>
   </tr>
   <tr style="text-align:right">
   <td>Erlang</td>
