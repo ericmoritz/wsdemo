@@ -42,6 +42,7 @@ start_clients(_, _, 0) ->
     end;
 start_clients(Hostname, Port, Clients) ->
     start_client(Hostname, Port),
+    timer:sleep(1),
     start_clients(Hostname, Port, Clients-1).
 
 init([Hostname, Port, Clients]) ->
