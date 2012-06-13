@@ -86,6 +86,13 @@ Number of crashed clients from a reason other than timeout
   <td>0</td>
   </tr>
   <tr>
+  <td>Java (Webbit)</td>
+  <td>00.567ms</td>
+  <td>00.835ms</td>
+  <td>1028390</td>
+  <td>157</td>
+  </tr>
+  <tr>
   <td>Go</td>
   <td>00.284ms</td>
   <td>18.503ms</td>
@@ -115,6 +122,11 @@ the 2 second TCP connection timeout.
 I expected Go to kick Erlang's ass in the performance department but
 the message latency was much higher than Erlang's latency and we had
 225 unhappy customers. Go only reached C9.775k; close but no cigar.
+
+I did not know what to expect with the Java Webbit implementation.  I
+expected it to perform somewhere close to the Go implementation.  The
+Webbit implementation did do much better than the Go implementation
+but it still had 157 connection timeouts which is unacceptable.
 
 I was very surprised that node.js fell down after 5001 connections and
 that gevent fell down at 4792 connections.  Both platforms were
@@ -191,6 +203,80 @@ Results:
              {connection_timeouts,0},
              {crashes,0}]
 
+### Java (Webbit)
+
+Command:
+
+    cd competition
+    make
+    ./wsdemo-java.sh
+
+Results:
+
+    Running test with 10000 clients for 300 seconds
+    Result: [{connection_time,
+                 [{min,3338},
+                  {max,2623179},
+                  {arithmetic_mean,568653.1643968872},
+                  {geometric_mean,239776.61439946695},
+                  {harmonic_mean,44919.74165588423},
+                  {median,451451},
+                  {variance,306300228181.46747},
+                  {standard_deviation,553443.9702277615},
+                  {skewness,1.2305092991530981},
+                  {kurtosis,1.2062614948219368},
+                  {percentile,
+                      [{75,770172},{95,1664444},{99,2386111},{999,2614860}]},
+                  {histogram,
+                      [{203338,329},
+                       {403338,114},
+                       {603338,218},
+                       {803338,121},
+                       {1003338,52},
+                       {1203338,32},
+                       {1403338,52},
+                       {1603338,47},
+                       {1803338,33},
+                       {2003338,9},
+                       {2203338,4},
+                       {2403338,7},
+                       {2503338,2},
+                       {2703338,8},
+                       {2903338,0}]}]},
+             {latency,
+                 [{min,2404},
+                  {max,3125659},
+                  {arithmetic_mean,835454.7616731517},
+                  {geometric_mean,415058.36966433167},
+                  {harmonic_mean,127535.15422317719},
+                  {median,1120680},
+                  {variance,464519954989.0205},
+                  {standard_deviation,681557.0078790332},
+                  {skewness,0.2642559196998899},
+                  {kurtosis,-0.6775121016726264},
+                  {percentile,
+                      [{75,1395539},{95,1587208},{99,2847752},{999,3028506}]},
+                  {histogram,
+                      [{242404,413},
+                       {502404,25},
+                       {802404,33},
+                       {1002404,17},
+                       {1202404,46},
+                       {1502404,385},
+                       {1702404,83},
+                       {1902404,6},
+                       {2202404,0},
+                       {2402404,0},
+                       {2602404,2},
+                       {2902404,11},
+                       {3102404,6},
+                       {4002404,1}]}]},
+             {connections,4637},
+             {disconnections,0},
+             {messages,1028390},
+             {connection_timeouts,157},
+             {crashes,0}]
+    
 ### Go
 
 Command:

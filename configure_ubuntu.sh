@@ -1,4 +1,4 @@
-sudo apt-get install -y emacs python-dev python-setuptools build-essential erlang-nox libevent-dev git golang mercurial
+sudo apt-get install -y emacs python-dev python-setuptools build-essential erlang-nox libevent-dev git golang mercurial default-jdk
 sudo easy_install ws4py gevent
 
 git clone git://github.com/ericmoritz/wsdemo.git wsdemo
