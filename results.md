@@ -1,3 +1,11 @@
+# C10K Websocket Test
+
+## Methodology
+
+This benchmark starts a new client every 1ms, each client sends a
+timestamp message to the server every second and the server echos that
+message back to the client. 
+
 I started two m1.medium AWS instances.  On one instance I started one of the 
 servers and the other instance I ran the `./runtest` command as:
 
@@ -5,8 +13,25 @@ servers and the other instance I ran the `./runtest` command as:
     ulimit -n 999999
     ./runtest 300 $SERVER_HOSTNAME 8000 10000
 
+The clients communicated to the server via the server's public interface.
 
-After 5 minutes of running, the following stats are outputed.
+After 5 minutes of running, the statistics are dumped to a log file in
+`results/`.
+
+Both EC2 instances are configured with the following `etc/sysctl.conf`
+file:
+
+    # General gigabit tuning:
+    net.core.rmem_max = 16777216
+    net.core.wmem_max = 16777216
+    net.ipv4.tcp_rmem = 4096 87380 16777216
+    net.ipv4.tcp_wmem = 4096 65536 16777216
+    net.ipv4.tcp_syncookies = 1
+    # this gives the kernel more memory for tcp
+    # which you need with many (100k+) open socket connections
+    net.ipv4.tcp_mem = 50576   64768   98152
+    net.core.netdev_max_backlog = 2500
+
 
 ## stat definitions
 
@@ -43,7 +68,7 @@ and the client crashes
 
 Number of crashed clients from a reason other than timeout
 
-## Results
+## Summary
 
 <table>
   <tr>
@@ -82,6 +107,21 @@ Number of crashed clients from a reason other than timeout
   <td>5208</td>
   </tr>
 </table>
+
+Both the Python gevent/ws4py implementation and the Node.js websocket
+implementation failed hard with around half of the connections hitting
+the 2 second TCP connection timeout.
+
+I expected Go to kick Erlang's ass in the performance department but
+the message latency was much higher than Erlang's latency and we had
+225 unhappy customers. Go only reached C9.775k; close but no cigar.
+
+I was very surprised that node.js fell down after 5001 connections and
+that gevent fell down at 4792 connections.  Both platforms were
+specifically built to for the C10k problem and both platforms could
+barely handle C5k. 
+
+## Raw Data
 
 ### Erlang
 
