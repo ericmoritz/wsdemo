@@ -14,5 +14,5 @@ pushd src
   popd
 popd
 
-npm install websockets
+npm install websocket
 
