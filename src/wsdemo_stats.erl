@@ -26,7 +26,7 @@ stats() ->
                         end
                 end,
     Counters = lists:map(KeyFunFun(fun folsom_metrics:get_metric_value/1),
-                         [connections, disconnections, messages, ticks,
+                         [connections, disconnections, messages,
                           crashes]),
     Histograms = lists:map(KeyFunFun(fun folsom_metrics:get_histogram_statistics/1),
                            [connection_time, latency]),
@@ -54,7 +54,6 @@ init([Hostname, Port, Clients]) ->
     folsom_metrics:new_counter(disconnections),
     folsom_metrics:new_counter(messages),
     folsom_metrics:new_counter(crashes),
-    folsom_metrics:new_counter(ticks),
 
     spawn_link(fun() -> start_clients(Hostname, Port, Clients) end),
     {ok, no_state}.

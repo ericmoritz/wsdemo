@@ -33,11 +33,6 @@ Number of server disconnects
 
 Total number of messages received by the clients
 
-### ticks
-
-Number of ticks received by the clients.  ticks are sent every second per
-connection.
-
 ## crashes
 
 Number of crashed clients
