@@ -13,7 +13,7 @@ servers and the other instance I ran the `./runtest` command as:
     ulimit -n 999999
     ./runtest 300 $SERVER_HOSTNAME 8000 10000
 
-The clients communicated to the server via the server's public interface.
+The clients communicated to the server via the server's public IP.
 
 After 5 minutes of running, the statistics are dumped to a log file in
 `results/`.
