@@ -27,7 +27,7 @@ stats() ->
                 end,
     Counters = lists:map(KeyFunFun(fun folsom_metrics:get_metric_value/1),
                          [connections, disconnections, messages,
-                          crashes]),
+                          connection_timeouts, crashes]),
     Histograms = lists:map(KeyFunFun(fun folsom_metrics:get_histogram_statistics/1),
                            [connection_time, latency]),
     Histograms ++ Counters.
@@ -54,6 +54,7 @@ init([Hostname, Port, Clients]) ->
     folsom_metrics:new_counter(disconnections),
     folsom_metrics:new_counter(messages),
     folsom_metrics:new_counter(crashes),
+    folsom_metrics:new_counter(connection_timeouts),
 
     spawn_link(fun() -> start_clients(Hostname, Port, Clients) end),
     {ok, no_state}.
@@ -68,8 +69,13 @@ handle_cast(_Msg, State) ->
     {noreply, State}.
 
 handle_info({'EXIT', _Pid, Reason},State) ->
-    folsom_metrics:notify({crashes,1}),
-    error_logger:error_msg("~s: ~w~n", ["Crash", Reason]),
+    case Reason of
+        connection_timeout ->
+            folsom_metrics:notify({connection_timeouts,{inc, 1}});
+        _ ->
+            error_logger:error_msg("~s: ~p~n", ["Crash", Reason]),
+            folsom_metrics:notify({crashes,{inc, 1}})
+    end,
     {noreply, State}.
 
 code_change(_OldVsn, State, _Extra) ->
