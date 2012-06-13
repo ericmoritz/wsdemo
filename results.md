@@ -55,7 +55,7 @@ Number of crashed clients from a reason other than timeout
   </tr>
   <tr>
   <td>Erlang</td>
-  <td>00.864ms</td>
+  <td>00.865ms</td>
   <td>00.017ms</td>
   <td>2849294</td>
   <td>0</td>
@@ -63,13 +63,13 @@ Number of crashed clients from a reason other than timeout
   <tr>
   <td>Go</td>
   <td>00.284ms</td>
-  <td>18.502ms</td>
+  <td>18.503ms</td>
   <td>2398180</td>
   <td>225</td>
   </tr>
   <tr>
   <td>Node.js</td>
-  <td>00.767ms</td>
+  <td>00.768ms</td>
   <td>42.580ms</td>
   <td>1170847</td>
   <td>4299</td>
