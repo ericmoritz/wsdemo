@@ -508,3 +508,10 @@ Result:
              {messages,1052996},
              {connection_timeouts,5208},
              {crashes,0}]
+
+### Haskell Snap
+
+Command:
+
+    make
+    ./wsdemo-snap +RTS -N -A4M -qg1
