@@ -1,4 +1,4 @@
-sudo apt-get install -y emacs python-dev python-setuptools build-essential erlang-nox libevent-dev git golang mercurial default-jdk ruby rubygems
+sudo apt-get install -y emacs python-dev python-setuptools build-essential erlang-nox libevent-dev git golang mercurial default-jdk ruby rubygems haskell-platform
 sudo easy_install ws4py gevent
 
 git clone git://github.com/ericmoritz/wsdemo.git wsdemo
@@ -17,3 +17,6 @@ popd
 npm install websocket
 sudo go get code.google.com/p/go.net/websocket
 sudo gem install em-websocket
+
+sudo cabal update
+sudo cabal install snap-server snap-core websockets websockets-snap
