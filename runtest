@@ -1,0 +1,34 @@
+#!/usr/bin/env escript
+%% -*- erlang -*-
+%%! -smp enable
+
+-mode(compile).
+
+main([SecondsStr, Server, PortStr, ClientsStr]) ->
+    Port = list_to_integer(PortStr),
+    Clients = list_to_integer(ClientsStr),
+    Seconds = list_to_integer(SecondsStr),
+
+    code:add_paths(["deps/folsom/ebin",
+                    "deps/bear/ebin",
+                    "ebin"]),
+
+    application:start(folsom),
+    
+    io:format("Running test with ~p clients for ~p seconds~n",
+              [Clients, Seconds]),
+    wsdemo_stats:start_link(Server, Port, Clients),
+    timer:sleep(Seconds * 1000),
+    io:format("Result: ~p~n", [wsdemo_stats:stats()]);
+
+main([SecondsStr, ClientsStr]) ->
+    main([SecondsStr, "localhost", "8000", ClientsStr]);
+main(_) ->
+    usage().
+
+usage() ->
+    io:format("usage: ~n"
+     "runtest Seconds::integer() ClientCount::integer() | ~n"
+     "runtest Seconds::integer() Server::string() Port::integer() ClientCount::integer()~n", []).
+
+    

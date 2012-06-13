@@ -1,6 +1,6 @@
 .eunit
-deps
-priv
+deps/
+ebin/
 *.o
 *.beam
 *.plt
