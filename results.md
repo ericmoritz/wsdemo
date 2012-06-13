@@ -78,7 +78,7 @@ Number of crashed clients from a reason other than timeout
     <th>Messages</th>
     <th>Timeouts</th>
   </tr>
-  <tr>
+  <tr style="text-align:right">
   <td>Erlang</td>
   <td>865ms</td>
   <td>17ms</td>
