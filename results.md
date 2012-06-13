@@ -1,9 +1,9 @@
-I started two m1.medium AWS instances.  On one side I started one of the 
-servers and the other side I ran the `./runtest` command as:
+I started two m1.medium AWS instances.  On one instance I started one of the 
+servers and the other instance I ran the `./runtest` command as:
 
     sudo bash
     ulimit -n 999999
-    ./runtest 300 {host} 8000 10000
+    ./runtest 300 $SERVER_HOSTNAME 8000 10000
 
 
 After 5 minutes of running, the following stats are outputed.
