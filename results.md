@@ -81,7 +81,7 @@ Number of crashed clients from a reason other than timeout
   <tr>
   <td>Erlang</td>
   <td>865ms</td>
-  <td>017ms</td>
+  <td>17ms</td>
   <td>2849294</td>
   <td>0</td>
   </tr>
