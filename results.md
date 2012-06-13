@@ -80,36 +80,36 @@ Number of crashed clients from a reason other than timeout
   </tr>
   <tr>
   <td>Erlang</td>
-  <td>00.865ms</td>
-  <td>00.017ms</td>
+  <td>865ms</td>
+  <td>017ms</td>
   <td>2849294</td>
   <td>0</td>
   </tr>
   <tr>
   <td>Java (Webbit)</td>
-  <td>00.567ms</td>
-  <td>00.835ms</td>
+  <td>567ms</td>
+  <td>835ms</td>
   <td>1028390</td>
   <td>157</td>
   </tr>
   <tr>
   <td>Go</td>
-  <td>00.284ms</td>
-  <td>18.503ms</td>
+  <td>284ms</td>
+  <td>18503ms</td>
   <td>2398180</td>
   <td>225</td>
   </tr>
   <tr>
   <td>Node.js</td>
-  <td>00.768ms</td>
-  <td>42.580ms</td>
+  <td>768ms</td>
+  <td>42580ms</td>
   <td>1170847</td>
   <td>4299</td>
   </tr>
   <tr>
   <td>Python (ws4py)</td>
-  <td>01.561ms</td>
-  <td>34.889ms</td>
+  <td>1561ms</td>
+  <td>34889ms</td>
   <td>1052996</td>
   <td>5208</td>
   </tr>
