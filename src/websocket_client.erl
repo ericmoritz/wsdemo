@@ -107,14 +107,17 @@ handle_info({http,Socket,http_eoh},State) ->
         ?CONNECTING ->
             Headers = State#state.headers,
             case proplists:get_value('Upgrade',Headers) of
-                "websocket" ->
-                    inet:setopts(Socket, [{packet, raw}]),
-                    State1 = State#state{readystate=?OPEN,socket=Socket},
-                    Mod = State#state.callback,
-                    CBState = Mod:ws_onopen(State, State#state.callback_state),
-                    {noreply,State1#state{callback_state=CBState}};
-                _Any  ->
-                    {stop,error,State}
+                undefined ->
+                    {stop,{error, missing_upgrade_header},State};
+                Value ->
+                    case string:to_lower(Value) of
+                        "websocket" ->
+                            inet:setopts(Socket, [{packet, raw}]),
+                            State1 = State#state{readystate=?OPEN,socket=Socket},
+                            Mod = State#state.callback,
+                            CBState = Mod:ws_onopen(State, State#state.callback_state),
+                            {noreply,State1#state{callback_state=CBState}}
+                    end
             end;
         Other ->
             %% Bad state should have received response first
