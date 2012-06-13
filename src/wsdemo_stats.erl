@@ -73,6 +73,8 @@ handle_info({'EXIT', _Pid, Reason},State) ->
     case Reason of
         connection_timeout ->
             folsom_metrics:notify({connection_timeouts,{inc, 1}});
+        normal ->
+            pass;
         _ ->
             error_logger:error_msg("~s: ~p~n", ["Crash", Reason]),
             folsom_metrics:notify({crashes,{inc, 1}})
