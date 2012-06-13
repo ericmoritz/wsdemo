@@ -37,7 +37,7 @@ behaviour_info(_) ->
     undefined.
 
 -record(state, {socket,readystate=undefined,headers=[],callback, callback_state,
-                host, port, path,
+                server,
                 sofar = <<>>}).
 
 start_link(Mod,Host,Port) ->
@@ -48,12 +48,8 @@ start_link(Mod,Host,Port,Path) ->
 
 init([Mod,Host,Port,Path]) ->
     ModState = Mod:ws_init(),
-    {ok, Sock} = gen_tcp:connect(Host,Port,[binary,{packet, http},{active,true}], 1000),
-    Req = initial_request(Host,Path),
-    ok = gen_tcp:send(Sock,Req),
-    inet:setopts(Sock, [{packet, http}]),
-    {ok,#state{socket=Sock, callback=Mod, callback_state=ModState}}.
-
+    {ok, #state{server={Host,Port,Path},
+                callback=Mod, callback_state=ModState}, 0}.
 
 %% Write to the server
 write(Pid, Data) ->
@@ -78,6 +74,18 @@ handle_cast(close,State) ->
     {stop,normal,State1}.
 
 %% Start handshake
+handle_info(timeout, #state{server={Host,Port,Path}} = State) ->
+    
+    case gen_tcp:connect(Host,Port,
+                         [binary,{packet, http},{active,true}], 2000) of
+        {ok, Sock} ->
+            Req = initial_request(Host,Path),
+            ok = gen_tcp:send(Sock,Req),
+            inet:setopts(Sock, [{packet, http}]),
+            {noreply, State#state{socket=Sock}};
+        {error, timeout} ->
+            {stop, connection_timeout, State}
+    end;
 handle_info({http,Socket,{http_response,{1,1},101,_Status}}, State) ->
     State1 = State#state{readystate=?CONNECTING,socket=Socket},
     {noreply, State1};
