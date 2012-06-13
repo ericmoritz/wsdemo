@@ -37,12 +37,12 @@ file:
 
 ### connection_time
 
-Elapsed time in microseconds between the opening of the client TCP socket
+Elapsed time between the opening of the client TCP socket
 and the websocket handshake is finished.
 
 ### latency
 
-Elapsed time in microseconds for a message sent from the client to echo
+Elapsed time for a message sent from the client to echo
 back to the client by the server.
 
 ### connections
@@ -134,6 +134,8 @@ specifically built to for the C10k problem and both platforms could
 barely handle C5k. 
 
 ## Raw Data
+
+*NOTE:* All times in the raw data section are microseconds.  
 
 ### Erlang
 
