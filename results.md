@@ -135,7 +135,7 @@ barely handle C5k.
 
 ## Raw Data
 
-*NOTE:* All times in the raw data section are microseconds.  
+*NOTE:* All times in the raw data section are microseconds (μs).  
 
 ### Erlang
 
