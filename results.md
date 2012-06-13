@@ -64,7 +64,7 @@ Number of crashed clients from a reason other than timeout
   <td>Go</td>
   <td>00.284ms</td>
   <td>18.502ms</td>
-  <td>2849294</td>
+  <td>2398180</td>
   <td>225</td>
   </tr>
   <tr>
