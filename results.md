@@ -88,6 +88,14 @@ Number of crashed clients from a reason other than timeout
   <td>0</td>
   </tr>
   <tr>
+  <td>Haskell (Snap)</td>
+  <td>168ms</td>
+  <td>227ms</td>
+  <td>1187413</td>
+  <td>4996</td>
+  <td>108</td>
+  </tr>
+  <tr>
   <td>Java (Webbit)</td>
   <td>567ms</td>
   <td>835ms</td>
@@ -118,14 +126,6 @@ Number of crashed clients from a reason other than timeout
   <td>1052996</td>
   <td>4792</td>
   <td>5208</td>
-  </tr>
-  <tr>
-  <td>Haskell (Snap)</td>
-  <td>168ms</td>
-  <td>227ms</td>
-  <td>1187413</td>
-  <td>4996</td>
-  <td>108</td>
   </tr>
 </table>
 
