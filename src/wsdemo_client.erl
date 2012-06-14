@@ -4,7 +4,7 @@
 
 -export([start_link/0, start_link/2, start_link/3]).
 
--export([ws_init/0, ws_onopen/2, ws_onmessage/3, ws_info/3, ws_onclose/2]).
+-export([ws_init/0, ws_onopen/2, ws_onmessage/3, ws_info/3, ws_onclose/3]).
 
 -record(state, {start_time}).
 
@@ -55,8 +55,12 @@ ws_info(Client, {timeout, _Ref, send_ping}, State) ->
     erlang:start_timer(1000, self(), send_ping),
     State.
 
-ws_onclose(Client, State) ->
-    error_logger:info_msg("~p~n", [Client]),
+ws_onclose(_Client, tcp_closed, State) ->
+    % Server disconnected
     wsdemo_logger:event({ws_onclose, self()}),
+    State;
+ws_onclose(_Client, normal, State) ->
+    % We told the client to close
     State.
+
 

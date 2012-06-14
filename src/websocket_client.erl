@@ -32,7 +32,7 @@
 -export([behaviour_info/1]).
 
 behaviour_info(callbacks) ->
-    [{ws_init,0}, {ws_onopen,2}, {ws_onmessage,3}, {ws_info,3}, {ws_onclose,2}];
+    [{ws_init,0}, {ws_onopen,2}, {ws_onmessage,3}, {ws_info,3}, {ws_onclose,3}];
 behaviour_info(_) ->
     undefined.
 
@@ -68,7 +68,7 @@ handle_cast({send,Data}, State) ->
     {noreply, State};
 handle_cast(close,State) ->
     Mod = State#state.callback,
-    CBState = Mod:ws_onclose(State#state.callback_state),
+    CBState = Mod:ws_onclose(State, normal, State#state.callback_state),
     gen_tcp:close(State#state.socket),
     State1 = State#state{readystate=?CLOSED, callback_state=CBState},
     {stop,normal,State1}.
@@ -140,7 +140,7 @@ handle_info({tcp, _Socket, Data}, #state{callback=Mod, sofar=SoFar} = State) ->
     end;
 handle_info({tcp_closed, _Socket},State) ->
     Mod = State#state.callback,
-    CBState = Mod:ws_onclose(State, State#state.callback_state),
+    CBState = Mod:ws_onclose(State, tcp_closed, State#state.callback_state),
     {stop,normal,State#state{callback_state=CBState}};
 handle_info({tcp_error, _Socket, _Reason},State) ->
     {stop,tcp_error,State};
@@ -153,7 +153,6 @@ handle_call(_Request,_From,State) ->
     {reply,ok,State}.
 
 terminate(Reason, _State) ->
-    error_logger:info_msg("Websocket Client Terminated ~p~n",[Reason]),
     ok.
 
 code_change(_OldVsn, State, _Extra) ->

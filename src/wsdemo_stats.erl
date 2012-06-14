@@ -7,6 +7,7 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
 
+-record(state, {clients=[]}).
 
 start_link(Clients) ->
     start_link("localhost", 8000, Clients).
@@ -29,17 +30,21 @@ start_clients(Hostname, Port, Clients) ->
     start_clients(Hostname, Port, Clients-1).
 
 init([Hostname, Port, Clients]) ->
-    process_flag(trap_exit, true),
+    process_flag(trap_exit, false),
 
     spawn(fun() -> start_clients(Hostname, Port, Clients) end),
-    {ok, no_state}.
+    {ok, #state{}}.
 
-handle_call(stop, _From, State) ->                       
+handle_call(stop, _From, State) ->
+    lists:foreach(fun(Pid) ->
+                          websocket_client:close(Pid)
+                  end, State#state.clients),
     {stop, normal, ok, State}.
 
-handle_cast({start_client, Hostname, Port}, State) ->
-    wsdemo_client:start_link(Hostname, Port),
-    {noreply, State};
+handle_cast({start_client, Hostname, Port}, #state{clients=Pids} = State) ->
+    {ok, Pid} = wsdemo_client:start_link(Hostname, Port),
+    
+    {noreply, State#state{clients=[Pid|Pids]}};
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
@@ -53,4 +58,3 @@ code_change(_OldVsn, State, _Extra) ->
 terminate(_Reason, _State) ->
     ok.
 
-    
