@@ -1,0 +1,20 @@
+#!/usr/bin/env escript
+%% -*- erlang -*-
+%%! -smp enable
+
+-mode(compile).
+
+main([LogFile]) ->
+    code:add_paths(["ebin"]),
+    PR = packet_reader:open(LogFile),
+    PR:foldl(fun(Term, _) -> 
+                     io:format("~w~n", [Term])
+             end, '_');
+main(_) ->
+    usage().
+                
+usage() ->
+    io:format("usage: ~n"
+     "cat_stats LogFile::string()",[]).
+
+    

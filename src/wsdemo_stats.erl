@@ -2,7 +2,7 @@
 
 -behaviour(gen_server).
 
--export([start_link/1, start_link/3, start_clients/3, stop/0, stats/0]).
+-export([start_link/1, start_link/3, start_clients/3, stop/0]).
 
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
@@ -17,21 +17,6 @@ start_link(Hostname, Port, Clients) ->
 
 stop() ->
     gen_server:call(?MODULE, stop).
-
-
-stats() ->
-    KeyFunFun = fun(Fun) ->
-                        fun(Item) ->
-                                {Item, Fun(Item)}
-                        end
-                end,
-    Counters = lists:map(KeyFunFun(fun folsom_metrics:get_metric_value/1),
-                         [connections, disconnections, messages,
-                          connection_timeouts, crashes]),
-    Histograms = lists:map(KeyFunFun(fun folsom_metrics:get_histogram_statistics/1),
-                           [connection_time, latency]),
-    Histograms ++ Counters.
-
 
 start_client(Hostname, Port) ->
     gen_server:cast(?MODULE, {start_client, Hostname, Port}).
@@ -48,15 +33,6 @@ start_clients(Hostname, Port, Clients) ->
 init([Hostname, Port, Clients]) ->
     process_flag(trap_exit, true),
 
-    folsom_metrics:new_histogram(connection_time),    
-    folsom_metrics:new_histogram(latency),
-    folsom_metrics:new_counter(connections),
-    folsom_metrics:new_counter(active),
-    folsom_metrics:new_counter(disconnections),
-    folsom_metrics:new_counter(messages),
-    folsom_metrics:new_counter(crashes),
-    folsom_metrics:new_counter(connection_timeouts),
-
     spawn_link(fun() -> start_clients(Hostname, Port, Clients) end),
     {ok, no_state}.
 
@@ -69,16 +45,8 @@ handle_cast({start_client, Hostname, Port}, State) ->
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
-handle_info({'EXIT', _Pid, Reason},State) ->
-    case Reason of
-        connection_timeout ->
-            folsom_metrics:notify({connection_timeouts,{inc, 1}});
-        normal ->
-            pass;
-        _ ->
-            error_logger:error_msg("~s: ~p~n", ["Crash", Reason]),
-            folsom_metrics:notify({crashes,{inc, 1}})
-    end,
+handle_info({'EXIT', _Pid, _Reason}=Event,State) ->
+    wsdemo_logger:event(Event),
     {noreply, State}.
 
 code_change(_OldVsn, State, _Extra) ->
