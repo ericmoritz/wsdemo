@@ -33,4 +33,5 @@ Compile the results:
 
      ./compile_stats results/erlang.bin
 
-[Current Results](https://github.com/ericmoritz/wsdemo/blob/master/results.md)
+I am planning on rerunning these benchmarks with the new stats collecting code using 64bit m1.large instances.
+The [previous results](https://github.com/ericmoritz/wsdemo/blob/results-v1/results.md) are still available
