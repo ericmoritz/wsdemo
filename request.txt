@@ -7,4 +7,3 @@ Sec-WebSocket-Key: x3JJHMbDL1EzLkh9GBhXDw==
 Sec-WebSocket-Protocol: chat
 Sec-WebSocket-Version: 13
 
-draft-hixie: 68
