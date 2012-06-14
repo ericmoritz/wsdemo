@@ -5,10 +5,6 @@ var ws = require('ws')
 
 wss.on('connection', function(con) {
     
-    con.on('message', function() {
-
-        con.send.apply(this, arguments)
-
-    })
+    con.on('message', con.send)
 
 })
