@@ -22,36 +22,34 @@ start_link(Host, Port, Path) ->
     websocket_client:start_link(?MODULE, Host, Port, Path).
 
 ws_init() ->
+    wsdemo_logger:event({ws_init, self()}),
     #state{start_time=erlang:now()}.
 
-ws_onopen(_Client, #state{start_time=TS} = State) ->
-    Elapsed = timer:now_diff(erlang:now(), TS),
-    folsom_metrics:notify({connection_time, Elapsed}),
-    folsom_metrics:notify({connections, {inc, 1}}),
-    folsom_metrics:notify({active, {inc, 1}}),
+ws_onopen(_Client, State) ->
+    wsdemo_logger:event({ws_onopen, self()}),
     erlang:start_timer(0, self(), send_ping),
     State.
 
 ws_onmessage(Client, Msg, State) ->
-    folsom_metrics:notify({messages, {inc, 1}}),
     handle_msg(Client, Msg, State).
 
-handle_msg(Client, {text, <<"ping:",_/bits>> = Msg}, State) ->
+handle_msg(Client, {text, <<"ref:",_/bits>> = Msg}, State) ->
     % rewrite the text message as a binary message
     handle_msg(Client, {binary, Msg}, State);
-handle_msg(_Client, {binary, <<"ping:",NowBytes/bits>>}, State) ->
-    End = erlang:now(),
-    Start = decode_now(NowBytes),
-    Elapsed = timer:now_diff(End, Start),
-    folsom_metrics:notify({latency, Elapsed}),
+handle_msg(_Client, {binary, <<"ref:",RefBin/bits>>}, State) ->
+    Ref = binary_to_term(RefBin),
+    wsdemo_logger:event({recv_message, self(), Ref}),
     State;
 handle_msg(_Client, Msg, State) ->
     error_logger:warning_msg("Unmatched msg: ~p~n", [Msg]),
     State.
 
 ws_info(Client, {timeout, _Ref, send_ping}, State) ->
-    TS = encode_now(erlang:now()),
-    Data = <<"ping:", TS/binary>>,
+    Ref = make_ref(),
+    RefBin = term_to_binary(Ref),
+    Data = <<"ref:", RefBin/binary>>,
+
+    wsdemo_logger:event({send_message, self(), Ref}),
     websocket_client:write_sync(Client, {binary, Data}),
     % queue up the next send_ping message
     erlang:start_timer(1000, self(), send_ping),
@@ -59,8 +57,7 @@ ws_info(Client, {timeout, _Ref, send_ping}, State) ->
 
 ws_onclose(Client, State) ->
     error_logger:info_msg("~p~n", [Client]),
-    folsom_metrics:notify({active, {dec, 1}}),
-    folsom_metrics:notify({disconnections, {inc, 1}}),
+    wsdemo_logger:event({ws_onclose, self()}),
     State.
 
 encode_now({MegaSecs, Secs, MicroSecs}) ->

@@ -1,0 +1,89 @@
+#!/usr/bin/env escript
+%% -*- erlang -*-
+%%! -smp enable
+-record(state, {clients, messages}).
+
+-mode(compile).
+
+stats() ->
+    [
+     {clients, folsom_metrics:get_metric_value(clients)},
+     {handshakes, folsom_metrics:get_metric_value(handshakes)},
+     {connection_timeouts, folsom_metrics:get_metric_value(messages_recv)},
+     {handshake_time, folsom_metrics:get_histogram_statistics(handshake_time)},
+     {message_latency,
+        folsom_metrics:get_histogram_statistics(message_latency)},
+     {messages_sent, folsom_metrics:get_metric_value(messages_sent)},
+     {messages_recv, folsom_metrics:get_metric_value(messages_recv)},
+     {crashes, folsom_metrics:get_metric_value(messages_sent)}
+    ].
+
+reducer({Start, {ws_init, Pid}}, #state{clients=C} = State) ->
+    C2 = dict:store(Pid, Start, C),
+    folsom_metrics:notify({clients, {inc, 1}}),
+    State#state{clients=C2};
+reducer({End, {ws_onopen, Pid}}, #state{clients=C} = State) ->
+    Start = dict:fetch(Pid, C),
+    C2 = dict:erase(Pid, C),
+    Elapsed = timer:now_diff(End, Start) / 1000,
+    folsom_metrics:notify({handshakes, {inc, 1}}),
+    folsom_metrics:notify({handshake_time, Elapsed}),
+    State#state{clients=C2};
+reducer({Start, {send_message, Pid, Ref}}, #state{messages=M} = State) ->
+    M2 = dict:store({Pid, Ref}, Start, M),
+    folsom_metrics:notify({messages_sent, {inc, 1}}),
+    State#state{messages=M2};
+reducer({End, {recv_message, Pid, Ref}}, #state{messages=M} = State) ->
+    Start = dict:fetch({Pid, Ref}, M),
+    M2 = dict:erase({Pid, Ref}, M),
+    Elapsed = timer:now_diff(End, Start) / 1000,
+    folsom_metrics:notify({messages_recv, {inc, 1}}),
+    folsom_metrics:notify({message_latency, Elapsed}),
+    State#state{messages=M2};
+% ignore normal exits
+reducer({_TS, {'EXIT', _Pid, normal}}, State) ->
+    State;
+% record connection timeouts seperately
+reducer({_TS, {'EXIT', _Pid, connection_timeout}}, State) ->
+    folsom_metrics:notify({connection_timeouts, {inc, 1}}),
+    State;
+% record connection other crashes
+reducer({_TS, {'EXIT', _Pid, Reason}}, State) ->
+    folsom_metrics:notify({crashes, {inc, 1}}),
+    State;
+reducer(E, State) ->
+    io:format("~p~n", [E]),
+    State.
+
+main([LogFile]) ->
+    code:add_paths(["ebin",
+                    "deps/bear/ebin",
+                    "deps/folsom/ebin"]),
+
+    application:start(folsom),
+
+    folsom_metrics:new_histogram(handshake_time),
+    folsom_metrics:new_counter(clients),
+    folsom_metrics:new_counter(handshakes),
+
+    folsom_metrics:new_histogram(message_latency),
+    folsom_metrics:new_counter(messages_sent),
+    folsom_metrics:new_counter(messages_recv),
+    folsom_metrics:new_counter(crashes),
+    folsom_metrics:new_counter(connection_timeouts),
+
+    PR = packet_reader:open(LogFile),
+    
+    PR:foldl(fun reducer/2, #state{clients=dict:new(),
+                                   messages=dict:new()}),
+    
+    io:format("~p~n", [stats()]);
+main(_) ->
+    usage().
+
+                
+usage() ->
+    io:format("usage: ~n"
+     "cat_stats LogFile::string()",[]).
+
+    
