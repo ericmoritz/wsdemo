@@ -21,15 +21,16 @@ Start the server:
 
       sudo bash
       ulimit -n 999999
-      erl -pa ebin deps/*/ebin
-      1> wsdemo:start(8000).
+      erl -pa ebin deps/*/ebin -s wsdemo
 
 Start floodtest:
 
       sudo bash
       ulimit -n 999999
-      erl -pa ebin 
-      1> wsdemo_stats:start("localhost", 8000, 10000).
+      ./runtest results/erlang.bin 300 10000
 
-You will see the stats printed out as with the part one of C1M Comet demo.
+Compile the results:
 
+     ./compile_stats results/erlang.bin
+
+[Current Results](./results.md)
