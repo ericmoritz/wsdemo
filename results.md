@@ -103,6 +103,6 @@ Number of crashed clients from a reason other than timeout
 
 ## Summary
 
-*TODO*  The statistic gathering code has been refactored and the tests need to be reran.  The 
+*TODO*  The statistic gathering code has been refactored and the tests need to be rerun.  The 
 [previous results](https://github.com/ericmoritz/wsdemo/blob/results-v1/results.md) are still available.
 
