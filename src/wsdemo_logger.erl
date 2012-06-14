@@ -31,6 +31,9 @@ event(Term) ->
     disk_log:alog(?MODULE, {erlang:now(), Term}).
 
 close() ->
+    % Stop clients from send new message
+    disk_log:block(?MODULE), 
+    % Close the log
     disk_log:close(?MODULE).
 
 
