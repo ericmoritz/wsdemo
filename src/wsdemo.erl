@@ -15,7 +15,7 @@ start(Port) ->
                 {'_', [{'_', ?MODULE, []}]}
                ],
 
-    cowboy:start_listener(?MODULE, 1000,
+    cowboy:start_listener(?MODULE, 100,
                           cowboy_tcp_transport, [{port, Port}, {max_connections, infinity}],
                           cowboy_http_protocol, [{dispatch, Dispatch}]).
     
