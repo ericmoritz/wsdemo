@@ -15,12 +15,13 @@ main([LogFile, SecondsStr, Server, PortStr, ClientsStr]) ->
               "Data File: ~p~n",
               [Clients, Seconds, LogFile]),
 
-    wsdemo_logger:start_link(LogFile),
+    wsdemo_logger:new(LogFile),
     wsdemo_stats:start_link(Server, Port, Clients),
 
     timer:sleep(Seconds * 1000),
     io:format("Finished, syncing stats~n", []),
-    wsdemo_logger:stop(),
+
+    wsdemo_logger:close(),
     ok;
 main([LogFile, SecondsStr, ClientsStr]) ->
     main([LogFile, SecondsStr, "localhost", "8000", ClientsStr]);

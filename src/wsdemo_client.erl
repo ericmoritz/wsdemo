@@ -60,18 +60,3 @@ ws_onclose(Client, State) ->
     wsdemo_logger:event({ws_onclose, self()}),
     State.
 
-encode_now({MegaSecs, Secs, MicroSecs}) ->
-    <<MegaSecs:32, Secs:32, MicroSecs:32>>.
-
-decode_now(<<MegaSecs:32, Secs:32, MicroSecs:32>>) ->
-    {MegaSecs, Secs, MicroSecs}.
-
--ifdef(TEST).
-
-decode_now_test_() ->
-    Now = {1338,474888,611762},
-    [
-     ?_assertEqual(Now, decode_now(encode_now(Now)))
-     ].
-
--endif.

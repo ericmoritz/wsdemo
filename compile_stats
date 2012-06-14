@@ -72,10 +72,10 @@ main([LogFile]) ->
     folsom_metrics:new_counter(crashes),
     folsom_metrics:new_counter(connection_timeouts),
 
-    PR = packet_reader:open(LogFile),
-    
-    PR:foldl(fun reducer/2, #state{clients=dict:new(),
-                                   messages=dict:new()}),
+    wsdemo_logger:foldl(fun reducer/2,
+                        #state{clients=dict:new(),
+                               messages=dict:new()},
+                       LogFile),
     
     io:format("~p~n", [stats()]);
 main(_) ->

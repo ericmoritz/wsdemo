@@ -6,10 +6,11 @@
 
 main([LogFile]) ->
     code:add_paths(["ebin"]),
-    PR = packet_reader:open(LogFile),
-    PR:foldl(fun(Term, _) -> 
-                     io:format("~w~n", [Term])
-             end, '_');
+    wsdemo_logger:foldl(fun(Term, _) -> 
+                                io:format("~w~n", [Term])
+                        end, '_',
+                        LogFile),
+    ok;
 main(_) ->
     usage().
                 

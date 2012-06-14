@@ -1,68 +1,55 @@
 -module(wsdemo_logger).
--behaviour(gen_server).
--define(SERVER, ?MODULE).
--record(state, {fh}).
 
 %% ------------------------------------------------------------------
 %% API Function Exports
 %% ------------------------------------------------------------------
 
--export([start_link/1, event/1, stop/0]).
-
-%% ------------------------------------------------------------------
-%% gen_server Function Exports
-%% ------------------------------------------------------------------
-
--export([init/1, handle_call/3, handle_cast/2, handle_info/2,
-         terminate/2, code_change/3]).
+-export([new/1, event/1, close/0, foldl/3]).
 
 %% ------------------------------------------------------------------
 %% API Function Definitions
 %% ------------------------------------------------------------------
 
-start_link(Filename) ->
-    gen_server:start_link({local, ?SERVER}, ?MODULE, [Filename], []).
+new(Filename) ->
+    case file:delete(Filename) of
+        {error, enoent} ->
+            pass;
+        ok ->
+            pass;
+        {error, Reason} ->
+            exit({error, Reason})
+    end,
 
-event(Term) ->
-    gen_server:cast(?SERVER, {event, {erlang:now(), Term}}).
-
-%% Finish up all the pending messages and then stop the server
-stop() ->
-    gen_server:call(?SERVER, stop, infinity).
-
-%% ------------------------------------------------------------------
-%% gen_server Function Definitions
-%% ------------------------------------------------------------------
-
-init([Filename]) ->
-    {ok, FH} = file:open(Filename, [write,binary]),
-    {ok, #state{fh=FH}}.
-
-handle_call(stop, _From, State) ->
-    {stop, normal, ok, State};
-handle_call(_Request, _From, State) ->
-    {reply, ok, State}.
-
-handle_cast({event, Data}, State) ->
-    FH = State#state.fh,
-    Bin = term_to_binary(Data),
-    BinSize = size(Bin),
-    file:write(FH, <<BinSize:16, Bin/binary>>),
-    {noreply, State};
-handle_cast(_Msg, State) ->
-    {noreply, State}.
-
-handle_info(_Info, State) ->
-    {noreply, State}.
-
-terminate(_Reason, #state{fh=FH}) ->
-    file:close(FH),
+    % We deleted any existing log so anything other than
+    % {ok, Log} is something to crash over.
+    {ok, _Log} = disk_log:open([{name, ?MODULE},
+                                {file, Filename},
+                                {size, infinity}]),
     ok.
 
-code_change(_OldVsn, State, _Extra) ->
-    {ok, State}.
+event(Term) ->
+    disk_log:alog(?MODULE, {erlang:now(), Term}).
 
-%% ------------------------------------------------------------------
-%% Internal Function Definitions
-%% ------------------------------------------------------------------
+close() ->
+    disk_log:close(?MODULE).
 
+
+foldl(Fun, Acc, Filename) ->
+    {ok, DL} = disk_log:open([{file, Filename},
+                              {name, {?MODULE, make_ref()}},
+                              {mode, read_only}]),
+    foldl(Fun, Acc, DL, start).
+
+%% Internal
+foldl(Fun, Acc, DL, Cont) ->
+    case disk_log:chunk(DL, Cont) of 
+        eof ->
+            Acc;
+        {Cont2, Terms} ->
+            Acc0 = lists:foldl(Fun, Acc, Terms),
+            foldl(Fun, Acc0, DL, Cont2)
+    end.
+            
+
+    
+                             
