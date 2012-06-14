@@ -48,7 +48,7 @@ reducer({_TS, {'EXIT', _Pid, connection_timeout}}, State) ->
     folsom_metrics:notify({connection_timeouts, {inc, 1}}),
     State;
 % record connection other crashes
-reducer({_TS, {'EXIT', _Pid, Reason}}, State) ->
+reducer({_TS, {'EXIT', _Pid, _Reason}}, State) ->
     folsom_metrics:notify({crashes, {inc, 1}}),
     State;
 reducer(E, State) ->
