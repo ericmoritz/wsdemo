@@ -22,9 +22,7 @@ start_client(Hostname, Port) ->
     gen_server:cast(?MODULE, {start_client, Hostname, Port}).
 
 start_clients(_, _, 0) ->
-    receive 
-        stop -> ok
-    end;
+    ok;
 start_clients(Hostname, Port, Clients) ->
     start_client(Hostname, Port),
     timer:sleep(1),
@@ -33,7 +31,7 @@ start_clients(Hostname, Port, Clients) ->
 init([Hostname, Port, Clients]) ->
     process_flag(trap_exit, true),
 
-    spawn_link(fun() -> start_clients(Hostname, Port, Clients) end),
+    spawn(fun() -> start_clients(Hostname, Port, Clients) end),
     {ok, no_state}.
 
 handle_call(stop, _From, State) ->                       
