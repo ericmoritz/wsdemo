@@ -45,7 +45,7 @@ The clients communicate to the server via the server's public IP.
 
 ## Statistic data
 
-The data generated is an length encoded Binary Erlang term.  The term is in the following formats
+The data generated is an length encoded (2 bytes) Binary Erlang term. The term is in the following formats
 
     {timestamp(), {ws_init, pid()}}
     {timestamp(), {ws_onopen, pid()}}
