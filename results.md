@@ -61,7 +61,7 @@ To dump the messages to STDOUT run the following command:
 
 To generate aggregate statistics:
 
-   ./compile_stats $FILENAME
+    ./compile_stats $FILENAME
 
 ## Aggregate Statistic Definitions
 
