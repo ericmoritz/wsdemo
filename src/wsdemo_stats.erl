@@ -17,7 +17,7 @@ start_link(Hostname, Port, Clients) ->
                           [Hostname, Port, Clients], []).
 
 stop() ->
-    gen_server:call(?MODULE, stop).
+    gen_server:call(?MODULE, stop, infinity).
 
 start_client(Hostname, Port) ->
     gen_server:cast(?MODULE, {start_client, Hostname, Port}).
