@@ -15,7 +15,7 @@ stats() ->
         folsom_metrics:get_histogram_statistics(message_latency)},
      {messages_sent, folsom_metrics:get_metric_value(messages_sent)},
      {messages_recv, folsom_metrics:get_metric_value(messages_recv)},
-     {crashes, folsom_metrics:get_metric_value(messages_sent)}
+     {crashes, folsom_metrics:get_metric_value(crashes)}
     ].
 
 reducer({Start, {ws_init, Pid}}, #state{clients=C} = State) ->
