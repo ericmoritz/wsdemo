@@ -37,12 +37,12 @@ file:
 
 ### connection_time
 
-Elapsed time in microseconds between the opening of the client TCP socket
+Elapsed time between the opening of the client TCP socket
 and the websocket handshake is finished.
 
 ### latency
 
-Elapsed time in microseconds for a message sent from the client to echo
+Elapsed time for a message sent from the client to echo
 back to the client by the server.
 
 ### connections
@@ -70,47 +70,67 @@ Number of crashed clients from a reason other than timeout
 
 ## Summary
 
+![Connection time](http://i.imgur.com/JK9z3.jpg)
+![Latency](http://i.imgur.com/d6U9u.jpg)
+![Messages](http://i.imgur.com/VZXlW.jpg)
+![Connections](http://i.imgur.com/dpMzw.jpg)
+![Timeouts](http://i.imgur.com/r0MdU.jpg)
+
 <table>
   <tr>
     <th>Implementation</th>
     <th>Connection Time (mean)</th>
     <th>Latency (mean)</th>
     <th>Messages</th>
-    <th>Timeouts</th>
+    <th>Connections</th>
+    <th>Connection Timeouts</th>
   </tr>
-  <tr>
+  <tr style="text-align:right">
   <td>Erlang</td>
-  <td>00.865ms</td>
-  <td>00.017ms</td>
+  <td>865ms</td>
+  <td>17ms</td>
   <td>2849294</td>
+  <td>10000</td>
   <td>0</td>
   </tr>
   <tr>
+  <td>Haskell (Snap)</td>
+  <td>168ms</td>
+  <td>227ms</td>
+  <td>1187413</td>
+  <td>4996</td>
+  <td>108</td>
+  </tr>
+  <tr>
   <td>Java (Webbit)</td>
-  <td>00.567ms</td>
-  <td>00.835ms</td>
+  <td>567ms</td>
+  <td>835ms</td>
   <td>1028390</td>
+  <td>4637</td>
   <td>157</td>
   </tr>
   <tr>
   <td>Go</td>
-  <td>00.284ms</td>
-  <td>18.503ms</td>
+  <td>284ms</td>
+  <td>18503ms</td>
   <td>2398180</td>
+  <td>9775</td>
   <td>225</td>
   </tr>
   <tr>
-  <td>Node.js</td>
-  <td>00.768ms</td>
-  <td>42.580ms</td>
+  <td>Node.js (websocket)</td>
+  <td>768ms</td>
+  <td>42580ms</td>
   <td>1170847</td>
+  <td>5701</td>
   <td>4299</td>
   </tr>
   <tr>
   <td>Python (ws4py)</td>
-  <td>01.561ms</td>
-  <td>34.889ms</td>
+  <td>1561ms</td>
+  <td>34889ms</td>
   <td>1052996</td>
+  <td>4792</td>
   <td>5208</td>
   </tr>
 </table>
@@ -134,6 +154,8 @@ specifically built to for the C10k problem and both platforms could
 barely handle C5k. 
 
 ## Raw Data
+
+*NOTE:* All times in the raw data section are microseconds (μs).  
 
 ### Erlang
 
@@ -352,7 +374,7 @@ Results:
 
 Command:
 
-    node competition/wsdemo.js
+    node competition/wsdemo-websocket.js
 
 Result:
 
@@ -505,4 +527,82 @@ Result:
              {disconnections,0},
              {messages,1052996},
              {connection_timeouts,5208},
+             {crashes,0}]
+
+### Haskell Snap
+
+Command:
+
+    make
+    ./wsdemo-snap +RTS -N -A4M -qg1
+
+Result:
+
+    Running test with 10000 clients for 300 seconds       
+    Result: [{connection_time,
+                 [{min,1567},
+                  {max,2073630},
+                  {arithmetic_mean,168940.40758754863},
+                  {geometric_mean,31200.494465279622},
+                  {harmonic_mean,9399.811560514618},
+                  {median,26617},
+                  {variance,123018539492.51427},
+                  {standard_deviation,350739.98844231357},
+                  {skewness,2.7164844487113418},
+                  {kurtosis,6.85212552452187},
+                  {percentile,
+                      [{75,103744},{95,1043260},{99,1583130},{999,1924847}]},
+                  {histogram,
+                      [{131567,804},
+                       {251567,67},
+                       {401567,32},
+                       {501567,5},
+                       {701567,19},
+                       {801567,13},
+                       {901567,6},
+                       {1001567,11},
+                       {1101567,30},
+                       {1301567,14},
+                       {1401567,4},
+                       {1501567,8},
+                       {1601567,6},
+                       {1801567,6},
+                       {1901567,1},
+                       {2001567,1},
+                       {2101567,1},
+                       {2201567,0}]}]},
+             {latency,
+                 [{min,587},
+                  {max,936981},
+                  {arithmetic_mean,227188.01653696498},
+                  {geometric_mean,202801.5999348484},
+                  {harmonic_mean,94007.32548850514},
+                  {median,233930},
+                  {variance,7172450496.960787},
+                  {standard_deviation,84690.32115277865},
+                  {skewness,0.9561457641408602},
+                  {kurtosis,9.056862234860235},
+                  {percentile,[{75,275229},{95,337791},{99,439979},{999,872760}]},
+                  {histogram,
+                      [{30587,24},
+                       {60587,15},
+                       {90587,12},
+                       {120587,34},
+                       {150587,71},
+                       {180587,104},
+                       {210587,128},
+                       {240587,162},
+                       {270587,175},
+                       {300587,171},
+                       {400587,117},
+                       {500587,9},
+                       {600587,2},
+                       {700587,2},
+                       {800587,0},
+                       {900587,1},
+                       {1000587,1}]}]},
+             {connections,4996},
+             {disconnections,0},
+             {messages,1187413},
+             {connection_timeouts,108},
              {crashes,0}]
