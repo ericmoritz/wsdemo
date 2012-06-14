@@ -33,4 +33,4 @@ Compile the results:
 
      ./compile_stats results/erlang.bin
 
-[Current Results](./results.md)
+[Current Results](https://github.com/ericmoritz/wsdemo/blob/master/results.md)
