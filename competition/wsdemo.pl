@@ -24,8 +24,8 @@ my $srv_w = EV::io($srv_sock, EV::READ, sub {
             fh          => $sock,
             cb          => \&server,
             wait_for    => IN|EOF,
-	    HS		=> Protocol::WebSocket::Handshake::Server->new,
-	    Frame	=> Protocol::WebSocket::Frame->new,
+            HS          => Protocol::WebSocket::Handshake::Server->new,
+            Frame       => Protocol::WebSocket::Frame->new,
         });
     }
     elsif ($! != EAGAIN) {
@@ -45,23 +45,23 @@ sub server {
         $io->close();
     }
     elsif (!$io->{HS}->is_done) {
-	$io->{HS}->parse($io->{in_buf});
-	$io->{in_buf} = q{};
-	my $hs_err = $io->{HS}->error;
-	if ($hs_err) {
-	    $io->close();
-	    warn $hs_err;
-	}
-	elsif ($io->{HS}->is_done) {
-	    $io->write( $io->{HS}->to_string );
-	}
+        $io->{HS}->parse($io->{in_buf});
+        $io->{in_buf} = q{};
+        my $hs_err = $io->{HS}->error;
+        if ($hs_err) {
+            $io->close();
+            warn $hs_err;
+        }
+        elsif ($io->{HS}->is_done) {
+            $io->write( $io->{HS}->to_string );
+        }
     }
     else {
-	$io->{Frame}->append( $io->{in_buf} );
-	$io->{in_buf} = q{};
-	while (my $msg = $io->{Frame}->next_bytes) {
-	    $io->write( $io->{Frame}->new($msg)->to_bytes );
-	}
+        $io->{Frame}->append( $io->{in_buf} );
+        $io->{in_buf} = q{};
+        while (my $msg = $io->{Frame}->next_bytes) {
+            $io->write( $io->{Frame}->new($msg)->to_bytes );
+        }
     }
 }
 
