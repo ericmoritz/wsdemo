@@ -70,6 +70,12 @@ Number of crashed clients from a reason other than timeout
 
 ## Summary
 
+![Connection time](http://i.imgur.com/JK9z3.jpg)
+![Latency](http://i.imgur.com/d6U9u.jpg)
+![Messages](http://i.imgur.com/VZXlW.jpg)
+![Connections](http://i.imgur.com/dpMzw.jpg)
+![Timeouts](http://i.imgur.com/r0MdU.jpg)
+
 <table>
   <tr>
     <th>Implementation</th>
