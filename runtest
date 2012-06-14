@@ -4,31 +4,32 @@
 
 -mode(compile).
 
-main([SecondsStr, Server, PortStr, ClientsStr]) ->
+main([LogFile, SecondsStr, Server, PortStr, ClientsStr]) ->
     Port = list_to_integer(PortStr),
     Clients = list_to_integer(ClientsStr),
     Seconds = list_to_integer(SecondsStr),
 
-    code:add_paths(["deps/folsom/ebin",
-                    "deps/bear/ebin",
-                    "ebin"]),
-
-    application:start(folsom),
+    code:add_paths(["ebin"]),
     
-    io:format("Running test with ~p clients for ~p seconds~n",
-              [Clients, Seconds]),
-    wsdemo_stats:start_link(Server, Port, Clients),
-    timer:sleep(Seconds * 1000),
-    io:format("Result: ~p~n", [wsdemo_stats:stats()]);
+    io:format("Running test with ~p clients for ~p seconds~n"
+              "Data File: ~p~n",
+              [Clients, Seconds, LogFile]),
 
-main([SecondsStr, ClientsStr]) ->
-    main([SecondsStr, "localhost", "8000", ClientsStr]);
+    wsdemo_logger:start_link(LogFile),
+    wsdemo_stats:start_link(Server, Port, Clients),
+
+    timer:sleep(Seconds * 1000),
+    io:format("Finished, syncing stats~n", []),
+    wsdemo_logger:stop(),
+    ok;
+main([LogFile, SecondsStr, ClientsStr]) ->
+    main([LogFile, SecondsStr, "localhost", "8000", ClientsStr]);
 main(_) ->
     usage().
 
 usage() ->
     io:format("usage: ~n"
-     "runtest Seconds::integer() ClientCount::integer() | ~n"
-     "runtest Seconds::integer() Server::string() Port::integer() ClientCount::integer()~n", []).
+     "runtest LogFile::string() Seconds::integer() ClientCount::integer() | ~n"
+     "runtest LogFile::string() Seconds::integer() Server::string() Port::integer() ClientCount::integer()~n", []).
 
     
