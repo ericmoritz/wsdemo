@@ -9,7 +9,7 @@ stats() ->
     [
      {clients, folsom_metrics:get_metric_value(clients)},
      {handshakes, folsom_metrics:get_metric_value(handshakes)},
-     {connection_timeouts, folsom_metrics:get_metric_value(messages_recv)},
+     {connection_timeouts, folsom_metrics:get_metric_value(connection_timeouts)},
      {handshake_time, folsom_metrics:get_histogram_statistics(handshake_time)},
      {message_latency,
         folsom_metrics:get_histogram_statistics(message_latency)},
