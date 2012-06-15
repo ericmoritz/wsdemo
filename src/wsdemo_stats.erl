@@ -30,7 +30,7 @@ start_clients(Hostname, Port, Clients) ->
     start_clients(Hostname, Port, Clients-1).
 
 init([Hostname, Port, Clients]) ->
-    process_flag(trap_exit, false),
+    process_flag(trap_exit, true),
 
     spawn(fun() -> start_clients(Hostname, Port, Clients) end),
     {ok, #state{}}.
