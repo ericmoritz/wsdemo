@@ -9,14 +9,16 @@ main([LogFile, SecondsStr, Server, PortStr, ClientsStr]) ->
     Clients = list_to_integer(ClientsStr),
     Seconds = list_to_integer(SecondsStr),
 
-    code:add_paths(["ebin"]),
+    code:add_paths([
+                    "deps/eleveldb/ebin",
+                    "ebin"]),
     
     io:format("Running test with ~p clients for ~p seconds~n"
               "Data File: ~p~n",
               [Clients, Seconds, LogFile]),
 
-    wsdemo_logger:new(LogFile),
-    wsdemo_stats:start_link(Server, Port, Clients),
+    {ok, _} = wsdemo_logger:start_link(LogFile),
+    {ok, _} = wsdemo_stats:start_link(Server, Port, Clients),
 
     timer:sleep(Seconds * 1000),
     io:format("Finished, stopping clients~n", []),

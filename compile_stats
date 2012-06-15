@@ -18,27 +18,49 @@ stats() ->
      {crashes, folsom_metrics:get_metric_value(crashes)}
     ].
 
+% returns and erases a value if it is in the dict,
+% or stores if it does not exist
+pop_or_set(Key, OtherValue, D) ->
+    case dict:find(Key, D) of
+        {ok, Value} -> {pop, Value, dict:erase(Key, D)};
+        error -> {set, dict:store(Key, OtherValue, D)}
+    end.
+
+% If a time is already found in the dict, update the 
+% elapsed time for Metric
+update_elapsed_time(Metric, Key, Start, undefined, D) ->
+    case pop_or_set(Key, Start, D) of
+        {pop, End, D2} ->
+            update_elapsed_time(Metric, Key, Start, End, D2);
+        {set, D2} -> D2
+    end;
+update_elapsed_time(Metric, Key, undefined, End, D) ->
+    case pop_or_set(Key, End, D) of
+        {pop, Start, D2} ->
+            update_elapsed_time(Metric, Key, Start, End, D2);
+        {set, D2} -> D2
+    end;
+update_elapsed_time(Metric, _, Start, End, D) ->    
+    Elapsed = timer:now_diff(End, Start) / 1000,
+    folsom_metrics:notify({Metric, Elapsed}),
+    D.
+    
+
 reducer({Start, {ws_init, Pid}}, #state{clients=C} = State) ->
-    C2 = dict:store(Pid, Start, C),
     folsom_metrics:notify({clients, {inc, 1}}),
+    C2 = update_elapsed_time(handshake_time, Pid, Start, undefined, C),
     State#state{clients=C2};
 reducer({End, {ws_onopen, Pid}}, #state{clients=C} = State) ->
-    Start = dict:fetch(Pid, C),
-    C2 = dict:erase(Pid, C),
-    Elapsed = timer:now_diff(End, Start) / 1000,
     folsom_metrics:notify({handshakes, {inc, 1}}),
-    folsom_metrics:notify({handshake_time, Elapsed}),
+    C2 = update_elapsed_time(handshake_time, Pid, undefined, End, C),
     State#state{clients=C2};
 reducer({Start, {send_message, Pid, Ref}}, #state{messages=M} = State) ->
-    M2 = dict:store({Pid, Ref}, Start, M),
     folsom_metrics:notify({messages_sent, {inc, 1}}),
+    M2 = update_elapsed_time(message_latency, {Pid, Ref}, Start, undefined, M),
     State#state{messages=M2};
 reducer({End, {recv_message, Pid, Ref}}, #state{messages=M} = State) ->
-    Start = dict:fetch({Pid, Ref}, M),
-    M2 = dict:erase({Pid, Ref}, M),
-    Elapsed = timer:now_diff(End, Start) / 1000,
     folsom_metrics:notify({messages_recv, {inc, 1}}),
-    folsom_metrics:notify({message_latency, Elapsed}),
+    M2 = update_elapsed_time(message_latency, {Pid, Ref}, undefined, End, M),
     State#state{messages=M2};
 % ignore normal exits
 reducer({_TS, {'EXIT', _Pid, normal}}, State) ->
@@ -57,6 +79,7 @@ reducer(E, State) ->
 
 main([LogFile]) ->
     code:add_paths(["ebin",
+                    "deps/eleveldb/ebin",
                     "deps/bear/ebin",
                     "deps/folsom/ebin"]),
 

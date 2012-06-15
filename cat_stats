@@ -5,7 +5,9 @@
 -mode(compile).
 
 main([LogFile]) ->
-    code:add_paths(["ebin"]),
+    code:add_paths([
+                    "deps/eleveldb/ebin",
+                    "ebin"]),
     wsdemo_logger:foldl(fun(Term, _) -> 
                                 io:format("~w~n", [Term])
                         end, '_',
