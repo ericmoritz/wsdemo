@@ -34,7 +34,7 @@ close() ->
     gen_server:call(?MODULE, close).
 
 foldl(Fun, Acc0, LogFile) ->
-    {ok, Ref} = eleveldb:open(LogFile, []),
+    {ok, Ref} = eleveldb:open(LogFile, [{error_if_missing, true}]),
 
     Reducer = fun({_, VBin}, A) ->
                       V = binary_to_term(VBin),
@@ -45,8 +45,10 @@ foldl(Fun, Acc0, LogFile) ->
 %% Internal
 init([Filename]) ->                             
     ok = eleveldb:destroy(Filename, []),
+
     {ok, Ref} = eleveldb:open(Filename,
-                              [{create_if_missing, true}]),
+                              [{error_if_exists, true},
+                               {create_if_missing, true}]),
     {ok, Ref}.
 
 handle_call(close, _From, Ref) ->
