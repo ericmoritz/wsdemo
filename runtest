@@ -21,10 +21,7 @@ main([LogFile, SecondsStr, Server, PortStr, ClientsStr]) ->
     {ok, _} = wsdemo_stats:start_link(Server, Port, Clients),
 
     timer:sleep(Seconds * 1000),
-    io:format("Finished, stopping clients~n", []),
-    wsdemo_stats:stop(),
-
-    io:format("Writing Stats~n", []),
+    io:format("Finished~n", []),
     wsdemo_logger:close(),
     ok;
 main([LogFile, SecondsStr, ClientsStr]) ->
