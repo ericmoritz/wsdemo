@@ -152,7 +152,7 @@ handle_info(Msg, State) ->
 handle_call(_Request,_From,State) ->
     {reply,ok,State}.
 
-terminate(Reason, _State) ->
+terminate(_Reason, _State) ->
     ok.
 
 code_change(_OldVsn, State, _Extra) ->
@@ -175,6 +175,9 @@ unframe(Data) when byte_size(Data) =:= 1 ->
 %% 7 bit payload frame
 unframe(<<_Fin:1, _RSV:3, OpCode:4, _Mask:1, Len:7, Payload:Len/bytes, Rest/binary>>) when Len < 126 ->
     {ok, payload(OpCode, Payload), Rest};
+%% incomplete 7 bit payload len
+unframe(<<_Fin:1, _RSV:3, _OpCode:4, _Mask:1, Len:7, _Rest/binary>> = Data) when Len < 126 ->
+    {continue, Data};
 %% 7+16 bits payload prefix exists
 unframe(<<_Fin:1, _RSV:3, OpCode:4, _Mask:1, 126:7, Len:16, Payload:Len/bytes, Rest/binary>>) when Len > 125 ->
     {ok, payload(OpCode, Payload), Rest};
