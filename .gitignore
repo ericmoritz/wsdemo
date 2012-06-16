@@ -1,8 +1,12 @@
 .eunit
 deps/
 ebin/
+competition/log/*.log
+competition/wsdemo-snap
 *.o
 *.beam
 *.plt
+*.hi
 *~
 #*#
+*.class
