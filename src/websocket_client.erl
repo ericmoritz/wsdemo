@@ -188,8 +188,8 @@ unframe(<< _Fin:1, _Rsv:3, OpCode:4, _Mask:1, 127:7, 0:1, Len:63, Payload:Len/by
 unframe(<< _Fin:1, _Rsv:3, _Opcode:4, _Mask:1, 127:7, _Rest/bits>> = Data) ->
     {continue, Data};
 %% invalid frame, give up.
-unframe(_Data) ->
-    {error, badframe}.
+unframe(Data) ->
+    {error, badframe, Data}.
 
 payload(OpCode, Payload) ->
     Type = case OpCode of
