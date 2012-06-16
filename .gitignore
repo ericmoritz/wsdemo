@@ -4,3 +4,5 @@ ebin/
 *.o
 *.beam
 *.plt
+*~
+#*#

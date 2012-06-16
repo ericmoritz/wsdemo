@@ -1,6 +1,6 @@
 #!/usr/bin/env escript
 %% -*- erlang -*-
-%%! -smp enable
+%%! +K true
 
 -mode(compile).
 
@@ -18,9 +18,11 @@ main([LogFile, SecondsStr, Server, PortStr, ClientsStr]) ->
               [Clients, Seconds, LogFile]),
 
     {ok, _} = wsdemo_logger:start_link(LogFile),
-    {ok, _} = wsdemo_stats:start_link(Server, Port, Clients),
+    spawn(fun() -> report_loop(erlang:now(), Seconds) end),
 
-    timer:sleep(Seconds * 1000),
+    {ok, _} = wsdemo_stats:start_link(Server, Port, Clients),
+    io:format("Running~n", []),
+    timer:sleep(timer:seconds(Seconds)),
     io:format("Finished~n", []),
     wsdemo_logger:close(),
     ok;
@@ -34,4 +36,15 @@ usage() ->
      "runtest LogFile::string() Seconds::integer() ClientCount::integer() | ~n"
      "runtest LogFile::string() Seconds::integer() Server::string() Port::integer() ClientCount::integer()~n", []).
 
-    
+report_loop(Start, Seconds) ->
+    case whereis(wsdemo_logger) of
+        undefined ->
+	   timer:sleep(10),
+           report_loop(Start, Seconds);
+        Pid ->
+	   Elapsed = trunc(timer:now_diff(erlang:now(), Start) / 1000000),
+           {message_queue_len, Len} = process_info(Pid, message_queue_len),
+           io:format("logger queue: ~w Elapsed: ~ws of ~ws ~n", [Len,Elapsed, Seconds]),
+           timer:sleep(30000),
+           report_loop(Start, Seconds)
+    end.
