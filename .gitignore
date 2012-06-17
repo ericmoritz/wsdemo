@@ -1,4 +1,5 @@
-.eunit
+.*
+
 deps/
 ebin/
 competition/log/*.log
