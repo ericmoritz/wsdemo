@@ -8,13 +8,14 @@ sudo sysctl -p
 
 mkdir src
 pushd src
-  curl http://nodejs.org/dist/v0.6.19/node-v0.6.19.tar.gz | tar xz
-  pushd node-v0.6.19
+  curl http://nodejs.org/dist/v0.7.11/node-v0.7.11.tar.gz | tar xz
+  pushd node-v0.7.11
     ./configure && make && sudo make install
   popd
 popd
 
 npm install websocket
+npm install ws
 sudo go get code.google.com/p/go.net/websocket
 sudo gem install em-websocket
 
