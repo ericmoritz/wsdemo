@@ -1,8 +1,15 @@
+#*#
+*.beam
+*.class
+*.hi
+*.o
+*.plt
+*~
 .*
+*.pyc
 data/
-dist/
-results/
 deps/
+dist/
 ebin/
 competition/log/*.log
 competition/wsdemo-snap
@@ -13,5 +20,8 @@ competition/wsdemo-snap
 *~
 #*#
 *.class
-*.pyc
 node_modules
+results/
+stats/stat_results/
+stats/counts.csv
+stats/*.Rout
