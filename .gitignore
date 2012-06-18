@@ -13,3 +13,5 @@ competition/wsdemo-snap
 *~
 #*#
 *.class
+*.pyc
+node_modules
