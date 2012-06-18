@@ -1,6 +1,13 @@
 # R-script for producing statistics output:
-# Before runnning this script, makes sure you have the right packages installed:
-# install.packages("ggplot2")
+
+# Load all the necessary packages, installing missing ones when necessary
+packages.to.install <- c("plyr", "ggplot2")
+
+for(p in packages.to.install) {
+    print(p)
+    if (suppressWarnings(!require(p, character.only = TRUE))) install.packages(p, repos = "http://lib.stat.cmu.edu/R/CRAN")
+    if (p == "ggplot2") suppressWarnings(library(ggplot2))
+}
 
 # Make sure needed libraries are there
 require(ggplot2)
