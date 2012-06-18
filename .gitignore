@@ -1,5 +1,7 @@
 .*
-
+data/
+dist/
+results/
 deps/
 ebin/
 competition/log/*.log
