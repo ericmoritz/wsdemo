@@ -1,0 +1,43 @@
+#!/usr/bin/env escript
+%% -*- erlang -*-
+%%! -smp enable
+
+-mode(compile).
+
+reducer({TS, {Event, Pid}}, Type) ->
+    write_record(TS, Type, Pid, Pid, Event),
+    Type;
+reducer({TS, {'EXIT'=Event, Pid, Reason}}, Type) ->
+    write_record(TS, Type, Pid, {Pid, Reason}, Event),
+    Type;
+reducer({TS, {Event, Pid, Ref}}, Type) ->
+    write_record(TS, Type, Pid, {Pid, Ref}, Event),
+    Type.
+
+main([Type, LogFile]) ->
+    code:add_paths([
+                    "deps/eleveldb/ebin",
+                    "ebin"]),
+    write_head(),
+    wsdemo_logger:foldl(fun reducer/2, Type, LogFile),
+    ok;
+main(_) ->
+    usage().
+                
+usage() ->
+    io:format("usage: ~n"
+     "cat_stats Type::string() LogFile::string()~n",[]).
+
+%% Internal
+timestamp({Mega, Secs, Micro}) ->
+    Mega*1000*1000*1000*1000 + Secs * 1000 * 1000 + Micro.
+
+
+write_head() ->
+    io:format("timestamp, type, client_id, event_id, event~n", []).
+ 
+write_record(TS, Type, Pid, EventKey, Event) ->
+    io:format("~w, \"~s\", \"~w\", \"~w\", \"~w\"~n",
+              [timestamp(TS), Type, Pid, EventKey, Event]).
+
+    
