@@ -1,11 +1,2 @@
-case "$1" in
-   start)
-      erl -pa ../ebin ../deps/*/ebin +K true -s wsdemo
-      ;;
-   stop)
-      killall beam.smp
-      ;;
-   *)
-      echo "Usage $0 start|stop"
-      ;;
-esac
+#!/usr/bin/env bash
+erl -noshell -pa ../ebin ../deps/*/ebin +K true -s wsdemo
