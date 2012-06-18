@@ -60,6 +60,18 @@ ws.plot.box <- function(T) {
                                        colour = "grey50")))
 }
 
+# Volcano
+ws.plot.volcano <- function(T) {
+    v <- ggplot(T, aes(x = log10(elapsed_ms)))
+    (v      + stat_density(aes(ymax = ..density..,  ymin = -..density..),
+                           fill = "grey50",
+                           colour = "grey50",
+                           geom = "ribbon",
+                           position = "identity")
+            + facet_grid(. ~ framework)
+            + coord_flip())
+}
+
 ## BEGIN PLOTTING
 # Conn timeout
 pdf("stat_results/conn_timeouts.pdf")
@@ -75,6 +87,11 @@ ws.plot.jitter(handshake)
 dev.off()
 png("stat_results/handshake_jitter.png")
 ws.plot.jitter(handshake)
+dev.off()
+
+# Handshake Volcano
+pdf("stat_results/handshake_volcano.pdf", width=15)
+ws.plot.volcano(handshake)
 dev.off()
 
 # Handshake Box
