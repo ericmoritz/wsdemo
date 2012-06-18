@@ -13,6 +13,8 @@ counts <- read.csv("counts.csv", header=TRUE)
 handshake <- read.csv("handshake.csv", header=TRUE)
 handshake <- transform(handshake, elapsed_ms = elapsed / 1000)
 
+#latencies <- read.csv("latencies.csv", header=TRUE)
+
 # A plot of the connection timeouts as a function
 ws.plot.conn_timeout <- function() {
     conn_timeouts <- ggplot(counts, aes(x = framework, y = connection_timeouts))
@@ -27,10 +29,9 @@ ws.plot.conn_timeout <- function() {
                                        colour = "grey50")))
 }
 
-# Volcano plot of the kernel density estimate to compare time elapsed for
-# handshakes
-ws.plot.jitter <- function() {
-    box <- ggplot(handshake, aes(factor(framework), elapsed_ms))
+# Jitter plot of the handshake times
+ws.plot.jitter <- function(T) {
+    box <- ggplot(T, aes(factor(framework), elapsed_ms))
     (box + geom_jitter(alpha = 0.08)
        + xlab('Framework')
        + ylab('Handshake Time (ms)')
@@ -39,11 +40,17 @@ ws.plot.jitter <- function() {
                                        angle = 330,
                                        hjust = 0,
                                        colour = "grey50")))
+}
 
-#       + stat_density(aes(ymax = ..density.., ymin = -..density..),
-#                      fill = "grey50", colour = "grey50",
-#                      geom = "ribbon", position = "identity")
-#       + facet_grid(. ~ framework) + coord_flip())
+ws.plot.box <- function(T) {
+    box <- ggplot(T, aes(x = factor(framework), y = elapsed_ms))
+    (box + geom_boxplot() + scale_y_log10() + coord_trans(y = "log10")
+       + xlab('Framework')
+       + ylab('Handshake Time (ms)')
+       + opts(axis.text.x = theme_text(size = base_size * 0.8,
+                                       angle = 330,
+                                       hjust = 0,
+                                       colour = "grey50")))
 }
 
 ## BEGIN PLOTTING
@@ -55,10 +62,27 @@ png("stat_results/conn_timeouts.png")
 ws.plot.conn_timeout()
 dev.off()
 
-# Jitter
+# Handshake Jitter
 pdf("stat_results/handshake_jitter.pdf")
-ws.plot.jitter()
+ws.plot.jitter(handshake)
 dev.off()
 png("stat_results/handshake_jitter.png")
-ws.plot.jitter()
+ws.plot.jitter(handshake)
 dev.off()
+
+# Handshake Box
+pdf("stat_results/handshake_box.pdf")
+ws.plot.box(handshake)
+dev.off()
+png("stat_results/handshake_box.png")
+ws.plot.box(handshake)
+dev.off()
+
+# Latencies Box
+# pdf("stat_results/latencies_box.pdf")
+# ws.plot.box(latencies)
+# dev.off()
+# png("stat_results/latencies_box.png")
+# ws.plot.box(latencies)
+# dev.off()
+
