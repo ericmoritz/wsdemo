@@ -1,58 +1,73 @@
 -module(wsdemo_logger).
 
+-behavior(gen_server).
+
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2,
+         terminate/2, code_change/3]).
+
+
 %% ------------------------------------------------------------------
 %% API Function Exports
 %% ------------------------------------------------------------------
 
--export([new/1, event/1, close/0, foldl/3]).
+-export([start_link/1, event/1, close/0, foldl/3]).
 
 %% ------------------------------------------------------------------
 %% API Function Definitions
 %% ------------------------------------------------------------------
 
-new(Filename) ->
-    case file:delete(Filename) of
-        {error, enoent} ->
-            pass;
-        ok ->
-            pass;
-        {error, Reason} ->
-            exit({error, Reason})
-    end,
+start_link(Filename) ->
+    gen_server:start_link({local, ?MODULE}, ?MODULE,
+                          [Filename], []).
 
-    % We deleted any existing log so anything other than
-    % {ok, Log} is something to crash over.
-    {ok, _Log} = disk_log:open([{name, ?MODULE},
-                                {file, Filename},
-                                {size, infinity}]),
-    ok.
-
-event(Term) ->
-    disk_log:alog(?MODULE, {erlang:now(), Term}).
+event(Event) ->
+    Now = erlang:now(),
+    gen_server:cast(?MODULE, {event, 
+                              {
+                                % Key
+                                {Now, make_ref(), self()},
+                                % Val
+                                {Now, Event}
+                               }}).
 
 close() ->
-    % Stop clients from send new message
-    disk_log:block(?MODULE), 
-    % Close the log
-    disk_log:close(?MODULE).
+    gen_server:call(?MODULE, close).
 
+foldl(Fun, Acc0, LogFile) ->
+    {ok, Ref} = eleveldb:open(LogFile, [{error_if_missing, true}]),
 
-foldl(Fun, Acc, Filename) ->
-    {ok, DL} = disk_log:open([{file, Filename},
-                              {name, {?MODULE, make_ref()}},
-                              {mode, read_only}]),
-    foldl(Fun, Acc, DL, start).
+    Reducer = fun({_, VBin}, A) ->
+                      V = binary_to_term(VBin),
+                      Fun(V, A)
+              end,
+    eleveldb:fold(Ref, Reducer, Acc0, []).
 
 %% Internal
-foldl(Fun, Acc, DL, Cont) ->
-    case disk_log:chunk(DL, Cont) of 
-        eof ->
-            Acc;
-        {Cont2, Terms} ->
-            Acc0 = lists:foldl(Fun, Acc, Terms),
-            foldl(Fun, Acc0, DL, Cont2)
-    end.
-            
+init([Filename]) ->                             
+    ok = eleveldb:destroy(Filename, []),
 
+    {ok, Ref} = eleveldb:open(Filename,
+                              [{error_if_exists, true},
+                               {create_if_missing, true}]),
+    {ok, Ref}.
+
+handle_call(close, _From, Ref) ->
+    {stop, normal, ok, Ref};
+handle_call(_Msg, _From, Ref) ->
+    {noreply, Ref}.
+
+handle_cast({event, {Key, Event}}, Ref) ->
+    KeyBin = term_to_binary(Key),
+    EventBin = term_to_binary(Event),
+    ok = eleveldb:put(Ref, KeyBin, EventBin, []),
+    {noreply, Ref}.
+
+handle_info(_Msg, Ref) ->    
+    {noreply, Ref}.
+
+code_change(_, State, _) ->
+    {ok, State}.
+
+terminate(_Reason, _State) ->
+    ok.
     
-                             
