@@ -6,6 +6,7 @@
 *.plt
 *~
 .*
+*.Rout
 competition/log/*.log
 competition/wsdemo-snap
 data/
@@ -14,3 +15,4 @@ dist/
 ebin/
 results/
 stats/stat_results/
+stats/*.csv
