@@ -6,11 +6,15 @@
 *.plt
 *~
 .*
+*.pyc
 competition/log/*.log
 competition/wsdemo-snap
+competition/node_modules
 data/
 deps/
 dist/
 ebin/
 results/
 stats/stat_results/
+stats/counts.csv
+stats/*.Rout
