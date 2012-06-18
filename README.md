@@ -20,10 +20,10 @@ Include a bash script in `competition/` that will start your server in
 the most ideal way, with any optimization flags needed, etc. The name
 of the script should take the following format:
 
-    wsdemo-start-{language}-{platform}.sh
+    server-{language}-{platform}.sh
 
 For instance if you wrote an echo server using `bash` and `nc` the
-filename would be `competition/wsdemo-start-bash-nc.sh`.  
+filename would be `competition/server-bash-nc.sh`.  
 
 Finally add an entry into `./bin/run_all_tests.sh` for instance, for
 our fictitious bash/nc server, the addition would be:
