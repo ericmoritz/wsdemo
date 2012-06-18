@@ -32,7 +32,7 @@ ws.plot.conn_timeout <- function() {
 # Jitter plot of the handshake times
 ws.plot.jitter <- function(T) {
     box <- ggplot(T, aes(factor(framework), elapsed_ms))
-    (box + geom_jitter(alpha = 0.08)
+    (box + geom_jitter(alpha = 0.08) + coord_trans(y = "log10")
        + xlab('Framework')
        + ylab('Handshake Time (ms)')
        + opts(axis.ticks = theme_blank(),
@@ -44,7 +44,7 @@ ws.plot.jitter <- function(T) {
 
 ws.plot.box <- function(T) {
     box <- ggplot(T, aes(x = factor(framework), y = elapsed_ms))
-    (box + geom_boxplot() + scale_y_log10() + coord_trans(y = "log10")
+    (box + geom_boxplot() + coord_trans(y = "log10")
        + xlab('Framework')
        + ylab('Handshake Time (ms)')
        + opts(axis.text.x = theme_text(size = base_size * 0.8,
