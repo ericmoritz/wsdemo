@@ -4,3 +4,4 @@ ebin/
 *.o
 *.beam
 *.plt
+competition/cljwebdemo/target/*
