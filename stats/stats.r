@@ -51,7 +51,7 @@ ws.plot.jitter <- function(T) {
 
 ws.plot.box <- function(T) {
     box <- ggplot(T, aes(x = factor(framework), y = elapsed_ms))
-    (box + geom_boxplot() + coord_trans(y = "log10")
+    (box + geom_jitter(alpha = 0.2) + geom_boxplot(outlier.shape = NA, alpha=0.5) + coord_trans(y = "log10")
        + xlab('Framework')
        + ylab('Handshake Time (ms)')
        + opts(axis.text.x = theme_text(size = base_size * 0.8,
