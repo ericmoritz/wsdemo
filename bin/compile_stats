@@ -1,0 +1,159 @@
+#!/usr/bin/env escript
+%% -*- erlang -*-
+%%! -smp enable
+-mode(compile).
+
+-record(counts, {clients=0,
+                 handshakes=0,
+                 connection_timeouts=0,
+                 messages_sent=0,
+                 messages_recv=0,
+                 crashes=0}).
+
+-record(state, {clients, messages,
+                type,
+                handshake_times,
+                message_latencies,
+                counts=#counts{}}).
+
+write_stats_head(FH) ->
+    io:format(FH, "type, clients, handshakes, connection_timeouts, messages_sent, messages_recv, crashes~n", []).
+
+write_stats(FH, 
+            #state{counts=Counts, type=Type}) ->
+    io:format(FH, "\"~s\"", [Type]),
+    lists:foreach(fun(Field) ->
+                          Val = element(Field, Counts),
+                          io:format(FH, ", ~w", [Val])
+                  end,
+                  [#counts.clients,
+                   #counts.handshakes,
+                   #counts.connection_timeouts,
+                   #counts.messages_sent,
+                   #counts.messages_recv,
+                   #counts.crashes]),
+    io:format(FH, "~n", []).
+
+% returns and erases a value if it is in the dict,
+% or stores if it does not exist
+pop_or_set(Key, OtherValue, D) ->
+    case dict:find(Key, D) of
+        {ok, Value} -> {pop, Value, dict:erase(Key, D)};
+        error -> {set, dict:store(Key, OtherValue, D)}
+    end.
+
+% If a time is already found in the dict, update the 
+% elapsed time for Metric
+update_elapsed_time(Metric, DField,
+                    Key, Start, undefined, State) ->
+    D = element(DField, State),
+
+    case pop_or_set(Key, Start, D) of
+        {pop, End, D2} ->
+            write_elapsed_time(Metric, Start, End, State),
+            setelement(DField, State, D2);
+        {set, D2} ->
+            setelement(DField, State, D2)
+    end;
+update_elapsed_time(Metric, DField, 
+                    Key, undefined, End, State) ->
+    D = element(DField, State),
+    case pop_or_set(Key, End, D) of
+        {pop, Start, D2} ->
+            write_elapsed_time(Metric, Start, End, State),
+            setelement(DField, State, D2);
+        {set, D2} ->
+            setelement(DField, State, D2)
+    end.
+
+write_elapsed_time_head(FH) ->
+    io:format(FH, "type, timestamp, elapsed~n", []).
+
+write_elapsed_time(Metric, Start, End, State) ->    
+    FH = element(Metric, State),
+    Elapsed = timer:now_diff(End, Start),
+    io:format(FH, "\"~s\", ~w, ~w~n", 
+              [State#state.type, timestamp(End), Elapsed]).
+    
+timestamp({Mega, Secs, Micro}) ->
+    Mega*1000*1000*1000*1000 + Secs * 1000 * 1000 + Micro.
+
+    
+inc_count(Field, Counts) ->
+    Current = element(Field, Counts),
+    setelement(Field, Counts, Current + 1).
+
+reducer({Start, {ws_init, Pid}}, State) ->
+    State2 = update_elapsed_time(#state.handshake_times, 
+                                 #state.clients,
+                                 Pid, Start, undefined, State),
+    State2#state{counts=inc_count(#counts.clients, State#state.counts)};
+reducer({End, {ws_onopen, Pid}}, State) ->
+    State2 = update_elapsed_time(#state.handshake_times, 
+                                 #state.clients,
+                                 Pid, undefined, End, State),
+    State2#state{counts=inc_count(#counts.handshakes, State#state.counts)};
+reducer({Start, {send_message, Pid, Ref}}, State) ->
+    State2 = update_elapsed_time(#state.message_latencies, 
+                                 #state.messages,
+                                 {Pid, Ref}, Start, undefined, State),
+
+    State2#state{counts=inc_count(#counts.messages_sent, State#state.counts)};
+reducer({End, {recv_message, Pid, Ref}}, State) ->
+    State2 = update_elapsed_time(#state.message_latencies,
+                                 #state.messages,
+                                 {Pid, Ref}, undefined, End, State),
+    State2#state{counts=inc_count(#counts.messages_recv, State#state.counts)};
+% ignore normal exits
+reducer({_TS, {'EXIT', _Pid, normal}}, State) ->
+    State;
+% record connection timeouts seperately
+reducer({_TS, {'EXIT', _Pid, connection_timeout}}, State) ->
+    State#state{counts=inc_count(#counts.connection_timeouts,
+                                 State#state.counts)};
+% record connection other crashes
+reducer({_TS, {'EXIT', _Pid, _Reason}}, State) ->
+    State#state{counts=inc_count(#counts.crashes,
+                                 State#state.counts)};
+reducer(E, State) ->
+    io:format("~p~n", [E]),
+    State.
+
+main([Type, LogFile]) ->
+    code:add_paths(["ebin",
+                    "deps/eleveldb/ebin"]),
+
+    {ok, HSFH} = file:open(filename:join(LogFile, "handshake_times.csv"),
+                           [write]),
+    {ok, MLFH} = file:open(filename:join(LogFile, "message_latencies.csv"),
+                           [write]),
+    {ok, CountsFH} = file:open(filename:join(LogFile, "counts.csv"),
+                               [write]),
+
+    write_stats_head(CountsFH),
+    write_elapsed_time_head(HSFH),
+    write_elapsed_time_head(MLFH),
+
+    State = #state{type=Type,
+                   clients=dict:new(),
+                   messages=dict:new(),
+                   handshake_times=HSFH,
+                   message_latencies=MLFH},
+    
+    io:format("Aggregating stats~n", []),
+    State2 = wsdemo_logger:foldl(fun reducer/2, State, LogFile),
+
+    write_stats(CountsFH, State2),
+    ok = file:close(HSFH),
+    ok = file:close(MLFH),
+    ok = file:close(CountsFH),
+    ok;
+main(_) ->
+    usage().
+
+                
+usage() ->
+    io:format("usage: ~n"
+     "cat_stats Type::string() LogFile::string()~n",[]).
+
+    
