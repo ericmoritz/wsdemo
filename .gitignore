@@ -8,9 +8,6 @@
 .*
 *.pyc
 *.Rout
-competition/log/*.log
-competition/wsdemo-snap
-competition/node_modules
 data/
 deps/
 dist/
@@ -19,3 +16,8 @@ results/
 stats/stat_results/
 stats/*.Rout
 stats/*.csv
+competition/log/*.log
+competition/wsdemo-snap
+competition/node_modules
+competition/cljwebdemo/target/*
+
