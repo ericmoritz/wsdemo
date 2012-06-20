@@ -43,11 +43,11 @@ init(_) ->
     {ok, #state{port=Port}}.
 
 handle_call({start_server, ServerName}, From, State) ->
-    call_python(From, State#state.port, ["start ", ServerName]),
-    {noreply, State};
-handle_call(stop, From, State) ->
-    call_python(From, State#state.port, "stop"),
-    {noreply, State};
+    Reply = call_python(From, State#state.port, ["start ", ServerName]),
+    {reply, Reply, State};
+handle_call(stop_server, From, State) ->
+    Reply = call_python(From, State#state.port, "stop"),
+    {reply, Reply, State};
 handle_call(status, From, State) ->
     {reply, call_python(From, State#state.port, "status"), State};
 handle_call(_Request, _From, State) ->
@@ -76,20 +76,16 @@ call_python(Dest, Port, Msg, Timeout) ->
     collect_response(Port, Timeout).
 
 collect_response(Port, Timeout) ->
-        collect_response(Port, Timeout, [], []).
+    collect_response(Port, Timeout, [], []).
 
 collect_response(Port, Timeout, RespAcc, LineAcc) ->
     receive
-        {Port, {data, {eol, "OK"}}} ->
-            {response, lists:reverse(RespAcc)};
-        
-        {Port, {data, {eol, Result}}} ->
-            Line = lists:reverse([Result | LineAcc]),
-            collect_response(Port, Timeout, [Line | RespAcc], []);
-
-        {Port, {data, {noeol, Result}}} ->
-            collect_response(Port, Timeout, RespAcc, [Result | LineAcc])
-
+        {Port, {data, {eol, "__message__:" ++ Msg}}} ->
+            {message, Msg};
+        {Port, {data, {eol, "__error__:" ++ Error}}} ->        
+            {error, Error};
+        {Port, {data, {eol, Line}}} ->        
+            {error, {unknown_line, Line}}
     %% Prevent the gen_server from hanging indefinitely in case the
     %% spawned process is taking too long processing the request.
     after Timeout -> 
