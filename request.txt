@@ -4,6 +4,5 @@ Connection: Upgrade
 Host: localhost
 Origin: http://localhost/
 Sec-WebSocket-Key: x3JJHMbDL1EzLkh9GBhXDw==
-Sec-WebSocket-Protocol: chat
 Sec-WebSocket-Version: 13
 
