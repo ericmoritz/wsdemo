@@ -7,4 +7,4 @@
 (defn -main
   "Starts the websocket server"
   [& args]
-  (start-http-server ws-handler {:port 8080 :websocket true}))
+  (start-http-server ws-handler {:port 8000 :websocket true}))

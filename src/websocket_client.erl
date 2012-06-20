@@ -165,7 +165,6 @@ initial_request(Host,Path) ->
     "GET "++ Path ++" HTTP/1.1\r\nUpgrade: WebSocket\r\nConnection: Upgrade\r\n" ++ 
     "Host: " ++ Host ++ "\r\n" ++
     "Sec-WebSocket-Key: x3JJHMbDL1EzLkh9GBhXDw==\r\n" ++
-    "Sec-WebSocket-Protocol: chat\r\n" ++
     "Sec-WebSocket-Version: 13\r\n" ++
     "Origin: http://" ++ Host ++ "/\r\n\r\n".
 

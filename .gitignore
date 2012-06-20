@@ -19,5 +19,4 @@ stats/*.csv
 competition/log/*.log
 competition/wsdemo-snap
 competition/node_modules
-competition/cljwebdemo/target/*
-
+competition/cljwsdemo/target/
