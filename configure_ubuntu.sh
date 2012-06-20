@@ -1,11 +1,18 @@
-sudo apt-get install -y emacs python-dev python-setuptools build-essential erlang-nox libevent-dev git golang mercurial default-jdk ruby rubygems haskell-platform
-sudo easy_install ws4py gevent
+#!/bin/bash
+# Note: pushd/popd only work in bash
+
+sudo apt-get install -y curl emacs python-dev python-setuptools build-essential erlang-nox libevent-dev git golang mercurial default-jdk ruby rubygems haskell-platform
+sudo easy_install ws4py gevent tornado
 
 git clone git://github.com/ericmoritz/wsdemo.git wsdemo
 
 sudo cp wsdemo/etc/sysctl.conf /etc/
 sudo sysctl -p
 
+# install PyPy
+./install_pypy.sh
+
+# install Node
 mkdir src
 pushd src
   curl http://nodejs.org/dist/v0.7.11/node-v0.7.11.tar.gz | tar xz
