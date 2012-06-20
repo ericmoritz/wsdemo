@@ -22,16 +22,16 @@ start() ->
     start_link().
 
 start_link() ->
-    gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+    gen_server:start_link({global, ?SERVER}, ?MODULE, [], []).
 
 start_server(ServerName) ->
-    gen_server:call(?SERVER, {start_server, ServerName}, infinity).
+    gen_server:call({global, ?SERVER}, {start_server, ServerName}, infinity).
 
 stop_server() ->
-    gen_server:call(?SERVER, stop_server, infinity).
+    gen_server:call({global, ?SERVER}, stop_server, infinity).
 
 status() ->
-    gen_server:call(?SERVER, status, infinity).
+    gen_server:call({global, ?SERVER}, status, infinity).
 
 %% ------------------------------------------------------------------
 %% gen_server Function Definitions
