@@ -98,7 +98,7 @@ code_change(_OldVsn, StateName, State, _Extra) ->
 %% Internal Function Definitions
 %% ------------------------------------------------------------------
 start_server(ServerName) ->
-    error_logger:info_msg("Starting ~w~n", [ServerName]),
+    error_logger:info_msg("Starting ~s~n", [ServerName]),
     {message, "started"} = wsdemo_server_manager:start_server(ServerName),
 
     % wait for the server to come up... TODO: Send a synchronous ping to the server
@@ -115,19 +115,21 @@ next_server() ->
 run_fulltest() ->
     gen_fsm:send_event(?SERVER, run_fulltest).
 
-do_atest(Callback, DBName, State) ->
+do_atest(Callback, DBName, TimeModifier, State) ->
     [Server|_] = State#state.servers,
     {_, DBRoot, Host, Port, Clients, Seconds} = State#state.config,
     DB = filename:join(DBRoot, DBName),
+
+    Seconds2 = trunc(Seconds * TimeModifier),
                   
     error_logger:info_msg("Testing ~p~n", [[{server, Server},
                                             {db, DB},
                                             {host, Host},
                                             {port, Port},
                                             {clients, Clients},
-                                            {seconds, Seconds}]]),
+                                            {seconds, Seconds2}]]),
     ok = wsdemo_runner_fsm:run(Callback,
-                               DB, Host, Port, Clients, Seconds).
+                               DB, Host, Port, Clients, Seconds2).
     
 do_warmup(State) ->
 
@@ -140,7 +142,7 @@ do_warmup(State) ->
 
     [Server|_] = State#state.servers,
     start_server(Server),
-    do_atest(WarmupCallback, Server ++ "-warmup", State).
+    do_atest(WarmupCallback, Server ++ "-warmup", 0.1, State).
     
 
 do_fulltest(State) ->
@@ -151,4 +153,4 @@ do_fulltest(State) ->
                          pass
                  end,
     [Server|_] = State#state.servers,
-    do_atest(FulltestCB, Server, State).
+    do_atest(FulltestCB, Server, 1, State).
