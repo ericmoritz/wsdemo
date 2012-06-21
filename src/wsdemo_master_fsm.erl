@@ -105,7 +105,7 @@ start_server(ServerName) ->
     timer:sleep(1000).
 
 stop_server(ServerName) ->
-    error_logger:info_msg("Stopping Server", [ServerName]),
+    error_logger:info_msg("Stopping Server ~s~n", [ServerName]),
     {message, "server stopped"} = wsdemo_server_manager:stop_server().
     
 next_server() ->

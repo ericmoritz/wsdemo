@@ -10,14 +10,5 @@
                   stdlib
                  ]},
   {mod, { wsdemo_bench_app, []}},
-  {env, [
-         {host, "localhost"},
-         {port, 8000},
-         {seconds, 10},
-         {clients, 10},
-         {data_root, "data/"},
-         {servers, [
-                    "erlang-cowboy"
-                   ]}
-        ]}
+  {env, []}
  ]}.
