@@ -57,10 +57,13 @@ idle({run_suite, Callback, Config}, State) ->
     {next_state, warmup, State2}.
 
 warmup(run_fulltest, State) ->
-    ok = do_fulltest(State),
+    do_fulltest(State),
     {next_state, fulltest, State}.
 
-fulltest(next_server, #state{callback=CB, servers=[_|Rest]} = State) ->
+fulltest(next_server, #state{callback=CB, servers=[Previous|Rest]} = State) ->
+    % stop the previous server
+    stop_server(Previous),
+
     case Rest of
         [] ->
             CB(done),
@@ -70,7 +73,7 @@ fulltest(next_server, #state{callback=CB, servers=[_|Rest]} = State) ->
             % pop off the current server and move to the warm up phase
             % for the next server
             State2 = State#state{servers=Rest},
-            ok = do_warmup(State2),
+            do_warmup(State2),
             {next_state, warmup, State2}
     end.
 
@@ -94,6 +97,17 @@ code_change(_OldVsn, StateName, State, _Extra) ->
 %% ------------------------------------------------------------------
 %% Internal Function Definitions
 %% ------------------------------------------------------------------
+start_server(ServerName) ->
+    error_logger:info_msg("Starting ~w~n", [ServerName]),
+    {message, "started"} = wsdemo_server_manager:start_server(ServerName),
+
+    % wait for the server to come up... TODO: Send a synchronous ping to the server
+    timer:sleep(1000).
+
+stop_server(ServerName) ->
+    error_logger:info_msg("Stopping Server", [ServerName]),
+    {message, "server stopped"} = wsdemo_server_manager:stop_server().
+    
 next_server() ->
     gen_fsm:send_event(?SERVER, next_server).
 
@@ -116,13 +130,16 @@ do_atest(Callback, DBName, State) ->
                                DB, Host, Port, Clients, Seconds).
     
 do_warmup(State) ->
+
     WarmupCallback = fun(done) ->
                              % send the full test event
                              run_fulltest();
                         (cancel) ->
                              pass
                  end,
+
     [Server|_] = State#state.servers,
+    start_server(Server),
     do_atest(WarmupCallback, Server ++ "-warmup", State).
     
 
