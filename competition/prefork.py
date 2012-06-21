@@ -1,7 +1,7 @@
 from multiprocessing import cpu_count
 from os              import fork
 
-def prefork( num=None ):
+def prefork( num=None, fork=fork ):
     """ Forks current process num times.
         Returns a list of child pids for master or an empty list for a child.
     """
