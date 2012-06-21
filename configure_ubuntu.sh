@@ -1,7 +1,7 @@
 #!/bin/bash
 # Note: pushd/popd only work in bash
 
-sudo apt-get install -y curl emacs python-dev python-setuptools build-essential erlang-nox libevent-dev git golang mercurial default-jdk ruby rubygems haskell-platform
+sudo apt-get install -y curl emacs python-dev python-setuptools build-essential erlang-nox libevent-dev git golang mercurial openjdk-7-jdk ruby rubygems haskell-platform
 sudo easy_install ws4py gevent tornado
 
 git clone git://github.com/ericmoritz/wsdemo.git wsdemo
