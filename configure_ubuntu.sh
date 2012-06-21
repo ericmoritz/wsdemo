@@ -2,7 +2,7 @@
 # Note: pushd/popd only work in bash
 
 sudo apt-get install -y curl emacs python-dev python-setuptools build-essential erlang-nox libevent-dev git golang mercurial openjdk-7-jdk ruby rubygems haskell-platform
-sudo easy_install ws4py gevent tornado
+sudo easy_install ws4py gevent tornado twisted txws
 
 git clone git://github.com/ericmoritz/wsdemo.git wsdemo
 
