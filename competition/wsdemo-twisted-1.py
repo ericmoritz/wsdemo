@@ -10,8 +10,9 @@ class EchoFactory( Factory ):
     def buildProtocol( self, addr ):
         return Echo()
 
-listenTCP(8000, WebSocketFactory( EchoFactory() ))
+if __name__ == "__main__":
+    listenTCP(8000, WebSocketFactory( EchoFactory() ))
 
-print "Twisted + txWS (1 worker)"
+    print "Twisted + txWS (1 worker)"
 
-run()
+    run()

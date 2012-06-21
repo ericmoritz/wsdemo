@@ -11,10 +11,11 @@ class EchoFactory( Factory ):
     def buildProtocol( self, addr ):
         return Echo()
 
-listenTCP(8000, WebSocketFactory( EchoFactory() ))
+if __name__ == "__main__":
+    listenTCP(8000, WebSocketFactory( EchoFactory() ))
 
-num = cpu_count()
-print "Twisted + txWS (%s workers)" % (num+1)
-prefork( num )
+    num = cpu_count()
+    print "Twisted + txWS (%s workers)" % (num+1)
+    prefork( num )
 
-run()
+    run()
