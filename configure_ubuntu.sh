@@ -10,7 +10,7 @@ sudo cp wsdemo/etc/sysctl.conf /etc/
 sudo sysctl -p
 
 # install PyPy
-./install_pypy.sh
+./wsdemo/install_pypy.sh
 
 # install Node
 mkdir src
