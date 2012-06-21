@@ -13,6 +13,7 @@ sudo sysctl -p
 # install pypy
 pushd wsdemo/competition
     if [ ! -d ./pypy-1.9 ]; then
+       # TODO make this platform independant
        curl http://cdn.bitbucket.org/pypy/pypy/downloads/pypy-1.9-linux64.tar.bz2 | tar xj
     fi
     curl http://python-distribute.org/distribute_setup.py | ./pypy-1.9/bin/pypy
