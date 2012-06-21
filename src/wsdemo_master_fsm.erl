@@ -7,7 +7,7 @@
 %% API Function Exports
 %% ------------------------------------------------------------------
 
--export([start_link/0, run_suite/2, run_suite/3, run_suite/6, next_server/0]).
+-export([start_link/0, run_suite/2, run_suite/3, run_suite/6]).
 
 %% ------------------------------------------------------------------
 %% gen_fsm Function Exports
@@ -18,7 +18,7 @@
          code_change/4]).
 
 %% state handlers
--export([idle/2, running/2]).
+-export([idle/2, warmup/2, fulltest/2]).
 
 %% ------------------------------------------------------------------
 %% API Function Definitions
@@ -39,9 +39,6 @@ run_suite(Servers, DataRoot, Host, Port, Clients, Seconds) ->
 run_suite(Callback, {_Servers, _DataRoot, _Host, _Port, _Clients, _Seconds} = Config) ->
     gen_fsm:send_event(?SERVER, {run_suite, Callback, Config}).
 
-next_server() ->
-    gen_fsm:send_event(?SERVER, next_server).
-
 %% ------------------------------------------------------------------
 %% gen_fsm Function Definitions
 %% ------------------------------------------------------------------
@@ -53,21 +50,29 @@ init(_Args) ->
 
 idle({run_suite, Callback, Config}, State) ->
     Servers = element(1, Config),
-
     State2 = State#state{callback=Callback,
                          servers=Servers,
                          config=Config},
+    ok = do_warmup(State2),
+    {next_state, warmup, State2}.
 
-    State3 = start_next_test(State2),
+warmup(run_fulltest, State) ->
+    ok = do_fulltest(State),
+    {next_state, fulltest, State}.
 
-    {next_state, running, State3}.
-
-running(next_server, #state{callback=CB, servers=[]}) ->
-    CB(done),
-    {next_state, idle, #state{}};
-running(next_server, State) ->
-    State2 = start_next_test(State),
-    {next_state, running, State2}.
+fulltest(next_server, #state{callback=CB, servers=[_|Rest]} = State) ->
+    case Rest of
+        [] ->
+            CB(done),
+            % we are out of servers to test, return to the idle state
+            {next_state, idle, #state{}};
+        Rest ->
+            % pop off the current server and move to the warm up phase
+            % for the next server
+            State2 = State#state{servers=Rest},
+            ok = do_warmup(State2),
+            {next_state, warmup, State2}
+    end.
 
 handle_event(Event, StateName, _State) ->
     % crash an unknown event
@@ -76,8 +81,6 @@ handle_event(Event, StateName, _State) ->
 handle_sync_event(Event, From, StateName, _State) ->
     % crash an unknown event
     exit({error, {invalid_event, {Event, From, StateName}}}).
-
-
 
 handle_info(_Info, StateName, State) ->
     {next_state, StateName, State}.
@@ -91,16 +94,17 @@ code_change(_OldVsn, StateName, State, _Extra) ->
 %% ------------------------------------------------------------------
 %% Internal Function Definitions
 %% ------------------------------------------------------------------
-start_next_test(State) ->
-    [Server|Rest] = State#state.servers,
-    {_, DBRoot, Host, Port, Clients, Seconds} = State#state.config,
-    DB = filename:join(DBRoot, Server),
+next_server() ->
+    gen_fsm:send_event(?SERVER, next_server).
 
-    RunnerCB = fun(done) ->
-                       wsdemo_master_fsm:next_server();
-                  (cancel) ->
-                       pass
-               end,
+%% switch from warmup to the full test
+run_fulltest() ->
+    gen_fsm:send_event(?SERVER, run_fulltest).
+
+do_atest(Callback, DBName, State) ->
+    [Server|_] = State#state.servers,
+    {_, DBRoot, Host, Port, Clients, Seconds} = State#state.config,
+    DB = filename:join(DBRoot, DBName),
                   
     error_logger:info_msg("Testing ~p~n", [[{server, Server},
                                             {db, DB},
@@ -108,6 +112,26 @@ start_next_test(State) ->
                                             {port, Port},
                                             {clients, Clients},
                                             {seconds, Seconds}]]),
-    ok = wsdemo_runner_fsm:run(RunnerCB,
-                               DB, Host, Port, Clients, Seconds),
-    State#state{current=Server, servers=Rest}.
+    ok = wsdemo_runner_fsm:run(Callback,
+                               DB, Host, Port, Clients, Seconds).
+    
+do_warmup(State) ->
+    WarmupCallback = fun(done) ->
+                             % send the full test event
+                             run_fulltest();
+                        (cancel) ->
+                             pass
+                 end,
+    [Server|_] = State#state.servers,
+    do_atest(WarmupCallback, Server ++ "-warmup", State).
+    
+
+do_fulltest(State) ->
+    FulltestCB = fun(done) ->
+                         % send the next_server event
+                         next_server();
+                    (cancel) ->
+                         pass
+                 end,
+    [Server|_] = State#state.servers,
+    do_atest(FulltestCB, Server, State).
