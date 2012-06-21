@@ -10,7 +10,7 @@
 -export([init/1]).
 
 %% Helper macro for declaring children of supervisor
--define(CHILD(I, Type), {I, {I, start_link, []}, transient, 5000, Type, [I]}).
+-define(CHILD(I, Type), {I, {I, start_link, []}, permanent, 5000, Type, [I]}).
 
 %% ===================================================================
 %% API functions
@@ -24,9 +24,8 @@ start_link() ->
 %% ===================================================================
 
 init([]) ->
-    % If the master crashes, restart entire test suite
-    % If the suite crashes 5 times within a minute, give up.
-    {ok, { {one_for_one, 5, 60}, [
-                                  ?CHILD(wsdemo_bench_master, worker)
+    {ok, { {one_for_all, 5, 60}, [
+                                  ?CHILD(wsdemo_master_fsm, worker),
+                                  ?CHILD(wsdemo_runner_fsm, worker)
                                  ]} }.
 
