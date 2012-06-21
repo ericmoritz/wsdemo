@@ -8,6 +8,9 @@ import subprocess
 import os
 import unittest
 import signal
+import logging
+
+log = logging.getLogger("server_manager")
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 PROJECT_ROOT = os.path.join(HERE, "../")
@@ -71,7 +74,27 @@ def main():
                 stop_server(server)
                 server = None
                 send_message("server stopped")
-
+        elif message.startswith("connections "):
+            hostname = message.lstrip("connections ")
+            try:
+                conn=get_connections(hostname)
+                send_message(str(conn))
+            except Exception, e:
+                log.exception("connections")
+                send_error("error %s" % (str(e)))
+        elif message == "memusage":
+            try:
+                rss=get_rss(server.pid)
+                send_message(str(rss))
+            except Exception, e:
+                log.exception("memusage")
+                send_error("error %s" % (str(e)))
+                
+        elif message == "pid":
+            if server_status(server):
+                send_message("%s" % (server.pid))
+            else:
+                send_error("server not running")
         elif message == "status":
             if server_status(server):
                 send_message("running: %s" % (server_type, ))
@@ -81,6 +104,18 @@ def main():
         # And finally, lets flush stdout because we are communicating with
         # Erlang via a pipe which is normally fully buffered.
         sys.stdout.flush()
+
+
+## Internal
+def get_connections(hostname):
+    lines = subprocess.check_output(["netstat", "-n"]).splitlines()
+    rows = (line.split() for line in lines if "ESTABLISHED" in line)
+    rows = (row for row in rows if row[4] == hostname)
+    return len(list(rows))
+    
+    
+def get_rss(pid):
+    return sum(map(int,subprocess.check_output(["ps", "-o rss=", "-g", str(pid)]).split()))
 
 
 class TestServerManager(unittest.TestCase):
