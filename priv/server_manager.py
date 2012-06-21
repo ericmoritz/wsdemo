@@ -63,7 +63,7 @@ def main():
             server_name = message.lstrip("start ")
             server = start_server(server_name)
             server_type = server_name
-            send_message("%s started" % (server_name))
+            send_message("started")
         elif message == "stop":
             if not server_status(server):
                 send_error("server not running")

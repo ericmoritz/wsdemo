@@ -1,4 +1,4 @@
--module(wsdemo_app).
+-module(wsdemo_bench_app).
 
 -behaviour(application).
 
@@ -10,7 +10,8 @@
 %% ===================================================================
 
 start(_StartType, _StartArgs) ->
-    wsdemo_sup:start_link().
+    io:format("Starting...~n", []),
+    wsdemo_bench_sup:start_link().
 
 stop(_State) ->
     ok.

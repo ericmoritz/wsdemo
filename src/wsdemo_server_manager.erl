@@ -42,14 +42,14 @@ init(_) ->
                      [{line, 255}, stream]),
     {ok, #state{port=Port}}.
 
-handle_call({start_server, ServerName}, From, State) ->
-    Reply = call_python(From, State#state.port, ["start ", ServerName]),
+handle_call({start_server, ServerName}, _From, State) ->
+    Reply = call_python(State#state.port, ["start ", ServerName]),
     {reply, Reply, State};
-handle_call(stop_server, From, State) ->
-    Reply = call_python(From, State#state.port, "stop"),
+handle_call(stop_server, _From, State) ->
+    Reply = call_python(State#state.port, "stop"),
     {reply, Reply, State};
-handle_call(status, From, State) ->
-    {reply, call_python(From, State#state.port, "status"), State};
+handle_call(status, _From, State) ->
+    {reply, call_python(State#state.port, "status"), State};
 handle_call(_Request, _From, State) ->
     {reply, ok, State}.
 
@@ -68,17 +68,14 @@ code_change(_OldVsn, State, _Extra) ->
 %% ------------------------------------------------------------------
 %% Internal Function Definitions
 %% ------------------------------------------------------------------
-call_python(Dest, Port, Msg) ->
-    call_python(Dest, Port, Msg, 1000).
+call_python(Port, Msg) ->
+    call_python(Port, Msg, 1000).
 
-call_python(Dest, Port, Msg, Timeout) ->
+call_python(Port, Msg, Timeout) ->
     true = port_command(Port, [Msg, "\n"]),
     collect_response(Port, Timeout).
 
 collect_response(Port, Timeout) ->
-    collect_response(Port, Timeout, [], []).
-
-collect_response(Port, Timeout, RespAcc, LineAcc) ->
     receive
         {Port, {data, {eol, "__message__:" ++ Msg}}} ->
             {message, Msg};

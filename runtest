@@ -4,7 +4,9 @@
 
 -mode(compile).
 
-main([LogFile, SecondsStr, Server, PortStr, ClientsStr]) ->
+main([LogFile, ClientsStr, SecondsStr]) ->
+    main([LogFile, "localhost", "8000", ClientsStr, SecondsStr]);
+main([LogFile, Server, PortStr, ClientsStr, SecondsStr]) ->
     Port = list_to_integer(PortStr),
     Clients = list_to_integer(ClientsStr),
     Seconds = list_to_integer(SecondsStr),
@@ -16,25 +18,31 @@ main([LogFile, SecondsStr, Server, PortStr, ClientsStr]) ->
     io:format("Running test with ~p clients for ~p seconds~n"
               "Data File: ~p~n",
               [Clients, Seconds, LogFile]),
+    process_flag(trap_exit, true),
 
-    {ok, _} = wsdemo_logger:start_link(LogFile),
+    {ok, Pid} = wsdemo_runner:start_link(LogFile, 
+                                         Server, Port, Clients, Seconds),
+    io:format("Running~n", []),
     spawn(fun() -> report_loop(erlang:now(), Seconds) end),
 
-    {ok, _} = wsdemo_stats:start_link(Server, Port, Clients),
-    io:format("Running~n", []),
-    timer:sleep(timer:seconds(Seconds)),
-    io:format("Finished~n", []),
-    wsdemo_logger:close(),
-    ok;
-main([LogFile, SecondsStr, ClientsStr]) ->
-    main([LogFile, SecondsStr, "localhost", "8000", ClientsStr]);
+    % wait for it to exit
+    receive 
+        {'EXIT', Pid, normal} ->
+            io:format("Finished~n", []);
+        {'EXIT', Pid, Reason} ->
+            io:format("Runner Crashed! ~w~n", [Reason])
+    after (Seconds+30) * 1000 ->
+            io:format("Hmm, the runner is 30 seconds late... This isn't good.", []),
+            exit({error, timeout})
+    end;
 main(_) ->
     usage().
 
+
 usage() ->
     io:format("usage: ~n"
-     "runtest LogFile::string() Seconds::integer() ClientCount::integer() | ~n"
-     "runtest LogFile::string() Seconds::integer() Server::string() Port::integer() ClientCount::integer()~n", []).
+     "runtest LogFile::string() ClientCount::integer() Seconds::integer() | ~n"
+     "runtest LogFile::string() Server::string() Port::integer() ClientCount::integer() Seconds::integer()~n", []).
 
 report_loop(Start, Seconds) ->
     case whereis(wsdemo_logger) of
