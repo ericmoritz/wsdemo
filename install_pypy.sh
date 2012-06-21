@@ -18,7 +18,7 @@ if [ ! -d "$PYPY_PREFIX/pypy-$PYPY_VERSION" ]; then
         sudo ln -s "../$PYPY" bin/pypy
         sudo ln -s "../pypy-$PYPY_VERSION/bin/pip" bin/pip-pypy
         # packages
-        sudo pip-pypy install tornado
+        sudo pip-pypy install tornado twisted txws
     popd
 fi
 echo "=== PyPy-$PYPY_VERSION is installed at $PYPY_PREFIX/pypy-$PYPY_VERSION ==="
