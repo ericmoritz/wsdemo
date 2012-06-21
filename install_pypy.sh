@@ -9,9 +9,9 @@ if [ ! -d "$PYPY_PREFIX/pypy-$PYPY_VERSION" ]; then
     echo ">>> Installing PyPy-$PYPY_VERSION into $PYPY_PREFIX/pypy-$PYPY_VERSION <<<"
     pushd "$PYPY_PREFIX"
         # bootstrap
-        wget -O - "$PYPY_URL" | sudo tar xj
+        curl "$PYPY_URL" | sudo tar xj
         PYPY="pypy-$PYPY_VERSION/bin/pypy"
-        wget -O - "http://python-distribute.org/distribute_setup.py" | sudo "$PYPY"
+        curl "http://python-distribute.org/distribute_setup.py" | sudo "$PYPY"
         sudo "pypy-$PYPY_VERSION/bin/easy_install" pip
         # symlinks
         sudo mkdir -p bin
