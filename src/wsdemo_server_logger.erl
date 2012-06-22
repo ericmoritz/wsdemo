@@ -6,7 +6,7 @@
 %% API Function Exports
 %% ------------------------------------------------------------------
 
--export([start_link/1, stop/0]).
+-export([start_link/2, start_link/1, stop/0]).
 
 %% ------------------------------------------------------------------
 %% gen_server Function Exports
@@ -18,6 +18,9 @@
 %% ------------------------------------------------------------------
 %% API Function Definitions
 %% ------------------------------------------------------------------
+start_link(Host, Port) when is_integer(Port) ->
+    HostAndPort = lists:flatten([Host, ":", integer_to_list(Port)]),
+    start_link(HostAndPort).
 
 -spec start_link(HostAndPort :: iolist()) -> {ok, pid()}.
 start_link(HostAndPort) ->
