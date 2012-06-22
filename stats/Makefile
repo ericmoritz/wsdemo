@@ -2,6 +2,19 @@
 
 all: stats
 
+inject-data:
+	@echo "---- Creating Database"
+	createdb wsdemo
+	@echo "---- Installing the DB Schema"
+	psql < database_setup.sql
+	@echo "---- Injecting raw data (expect this to take a lot of time"
+	psql < inject.sql
+	@echo "---- Aggregating data"
+	psql < aggregate.sql
+
+drop-data:
+	dropdb wsdemo
+
 stats: dirs counts.csv latencies.csv handshake.csv
 	R CMD BATCH stats.r
 
