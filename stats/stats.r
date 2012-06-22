@@ -1,7 +1,7 @@
 # R-script for producing statistics output:
 
 # Load all the necessary packages, installing missing ones when necessary
-packages.to.install <- c("plyr", "ggplot2")
+packages.to.install <- c("plyr", "ggplot2", "RPostgreSQL")
 
 for(p in packages.to.install) {
     print(p)
@@ -11,14 +11,18 @@ for(p in packages.to.install) {
 
 # Make sure needed libraries are there
 require(ggplot2)
+library(RPostgreSQL)
 
 # Set some global variables
 base_size <- 9
 
 # Read in data
+con <- dbConnect(dbDriver("PostgreSQL"), dbname = 'wsdemo')
+
 counts <- read.csv("counts.csv", header=TRUE)
-handshake <- read.csv("handshake.csv", header=TRUE)
+handshake <- dbReadTable(con, "handshakes")
 handshake <- transform(handshake, elapsed_ms = elapsed / 1000)
+# latencies <- dbReadTable(con, "latencies")
 
 #latencies <- read.csv("latencies.csv", header=TRUE)
 
@@ -51,7 +55,7 @@ ws.plot.jitter <- function(T) {
 
 ws.plot.box <- function(T) {
     box <- ggplot(T, aes(x = factor(framework), y = elapsed_ms))
-    (box + geom_jitter(alpha = 0.2) + geom_boxplot(outlier.shape = NA, alpha=0.5) + coord_trans(y = "log10")
+    (box + geom_jitter(alpha = 0.2, size = 0.9) + geom_boxplot(outlier.shape = NA, alpha=0.5) + coord_trans(y = "log10")
        + xlab('Framework')
        + ylab('Handshake Time (ms)')
        + opts(axis.text.x = theme_text(size = base_size * 0.8,
