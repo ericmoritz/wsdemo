@@ -45,10 +45,10 @@ run_suite(Callback, {_Servers, _DataRoot, _Host, _Port, _Clients, _Seconds} = Co
 
 init(_Args) ->
     process_flag(trap_exit, true),
-
     {ok, idle, #state{}}.
 
 idle({run_suite, Callback, Config}, State) ->
+    error_logger:info_msg("Running suite ~p~n", [config_to_propslist(Config)]),
     Servers = element(1, Config),
     State2 = State#state{callback=Callback,
                          servers=Servers,
@@ -113,6 +113,14 @@ code_change(_OldVsn, StateName, State, _Extra) ->
 %% ------------------------------------------------------------------
 %% Internal Function Definitions
 %% ------------------------------------------------------------------
+config_to_propslist({Servers, DataRoot, Host, Port, Clients, Seconds}) ->
+    [{servers, Servers},
+     {db_root, DataRoot},
+     {host, Host},
+     {port, Port},
+     {clients, Clients},
+     {seconds, Seconds}].
+
 start_server(ServerName) ->
     error_logger:info_msg("Starting ~s and waiting 15s for server init~n", [ServerName]),
     {message, <<"started">>} = wsdemo_server_manager:start_server(ServerName),
