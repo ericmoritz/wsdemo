@@ -100,13 +100,12 @@ call_python(Port, Msg, Timeout) ->
     collect_response(Port, Timeout).
 
 collect_response(Port, Timeout) ->
+    %% TODO: Add message refs
     receive
         {Port, {data, {eol, "__message__:" ++ Msg}}} ->
             {message, Msg};
         {Port, {data, {eol, "__error__:" ++ Error}}} ->        
             {error, Error};
-        {Port, {data, {eol, Line}}} ->        
-            {error, {unknown_line, Line}}
     %% Prevent the gen_server from hanging indefinitely in case the
     %% spawned process is taking too long processing the request.
     after Timeout -> 
