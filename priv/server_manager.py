@@ -28,6 +28,7 @@ def start_server(name):
     pid = subprocess.Popen(args,
                            stdin=subprocess.PIPE,
                            stderr=subprocess.PIPE,
+                           stdout=subprocess.PIPE,
                            preexec_fn=os.setsid)
     os.chdir(old_cwd)
     return pid
@@ -90,7 +91,6 @@ def route_command(message_key, command, args, state):
         else:
             send_message(message_key, "stopped")
     else:
-        import pdb; pdb.set_trace()
         send_error(message_key, "invalid command")
 
 
