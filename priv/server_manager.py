@@ -9,6 +9,7 @@ import os
 import unittest
 import signal
 import logging
+import re
 
 log = logging.getLogger("server_manager")
 
@@ -108,10 +109,20 @@ def main():
 
 
 ## Internal
+
+# OSX's netstat ips look like 127.0.0.0.8000 (really?)
+OSX_IP_PAT = re.compile(r"(\d+\.\d+\.\d+\.\d+)\.(\d+)")
+def fix_osx_ips(ip):
+    match = OSX_IP_PAT.match(ip)
+    if match:
+        return "%s:%s" % (match.groups())
+    else:
+        return ip
+
 def get_connections(hostname):
     lines = subprocess.check_output(["netstat", "-n"]).splitlines()
     rows = (line.split() for line in lines if "ESTABLISHED" in line)
-    rows = (row for row in rows if row[4] == hostname)
+    rows = (row for row in rows if fix_osx_ips(row[4]) == hostname)
     return len(list(rows))
     
 def ensure_started(server):
