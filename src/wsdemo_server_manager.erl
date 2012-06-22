@@ -6,7 +6,8 @@
 %% API Function Exports
 %% ------------------------------------------------------------------
 
--export([start/0, start_link/0, start_server/1, stop_server/0, status/0]).
+-export([start/0, start_link/0, start_server/1, stop_server/0,
+         memusage/0, connections/1, status/0]).
 
 %% ------------------------------------------------------------------
 %% gen_server Function Exports
@@ -33,6 +34,14 @@ stop_server() ->
 status() ->
     gen_server:call({global, ?SERVER}, status, infinity).
 
+memusage() ->
+    gen_server:call({global, ?SERVER}, memusage, infinity).    
+
+-spec connections(HostAndPort :: iolist()) -> integer().
+connections(HostAndPort) ->
+    gen_server:call({global, ?SERVER}, {connections, HostAndPort},
+                    infinity).
+
 %% ------------------------------------------------------------------
 %% gen_server Function Definitions
 %% ------------------------------------------------------------------
@@ -50,6 +59,13 @@ handle_call(stop_server, _From, State) ->
     {reply, Reply, State};
 handle_call(status, _From, State) ->
     {reply, call_python(State#state.port, "status"), State};
+handle_call(memusage, _From, State) ->
+    {reply, call_python_int(State#state.port, "memusage"), State};
+handle_call({connections, HostAndPort}, _From, State) ->
+    {reply,
+     call_python_int(State#state.port,
+                     ["connections ", HostAndPort]),
+     State};
 handle_call(_Request, _From, State) ->
     {reply, ok, State}.
 
@@ -68,6 +84,14 @@ code_change(_OldVsn, State, _Extra) ->
 %% ------------------------------------------------------------------
 %% Internal Function Definitions
 %% ------------------------------------------------------------------
+call_python_int(Port, Msg) ->
+    case call_python(Port, Msg) of
+        {message, IntString} ->
+            {ok, list_to_integer(IntString)};
+        Other ->
+            Other
+    end.
+
 call_python(Port, Msg) ->
     call_python(Port, Msg, 1000).
 

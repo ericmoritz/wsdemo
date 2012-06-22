@@ -83,24 +83,25 @@ def main():
                 log.exception("connections")
                 send_error("error %s" % (str(e)))
         elif message == "memusage":
-            try:
-                rss=get_rss(server.pid)
-                send_message(str(rss))
-            except Exception, e:
-                log.exception("memusage")
-                send_error("error %s" % (str(e)))
+            if ensure_started(server):
+                try:
+                    rss=get_rss(server.pid)
+                    send_message(str(rss))
+                except Exception, e:
+                    log.exception("memusage")
+                    send_error("error %s" % (str(e)))
                 
         elif message == "pid":
-            if server_status(server):
+            if ensure_started(server):
                 send_message("%s" % (server.pid))
-            else:
-                send_error("server not running")
         elif message == "status":
             if server_status(server):
                 send_message("running: %s" % (server_type, ))
             else:
                 send_message("stopped")
-        
+        else:
+            send_error("invalid command")
+
         # And finally, lets flush stdout because we are communicating with
         # Erlang via a pipe which is normally fully buffered.
         sys.stdout.flush()
@@ -113,6 +114,12 @@ def get_connections(hostname):
     rows = (row for row in rows if row[4] == hostname)
     return len(list(rows))
     
+def ensure_started(server):
+    if server_status(server):
+        return True
+    else:
+        send_error("server not running")
+        return False
     
 def get_rss(pid):
     return sum(map(int,subprocess.check_output(["ps", "-o rss=", "-g", str(pid)]).split()))

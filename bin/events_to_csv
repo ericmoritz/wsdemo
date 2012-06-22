@@ -4,6 +4,9 @@
 
 -mode(compile).
 
+reducer({TS, {server, {EventKey, RSS}}}, Type) ->
+    write_record(TS, Type, server, EventKey, RSS),
+    Type;
 reducer({TS, {Event, Pid}}, Type) ->
     write_record(TS, Type, Pid, Pid, Event),
     Type;
