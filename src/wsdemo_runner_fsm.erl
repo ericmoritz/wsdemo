@@ -1,13 +1,13 @@
 -module(wsdemo_runner_fsm).
 -behaviour(gen_fsm).
 -define(SERVER, ?MODULE).
--record(state, {callback, db, host, port, clients, seconds}).
+-record(state, {db, host, port, clients, seconds}).
 
 %% ------------------------------------------------------------------
 %% API Function Exports
 %% ------------------------------------------------------------------
 
--export([start_link/0, run/6, cancel/0]).
+-export([start_link/5, cancel/0]).
 
 %% ------------------------------------------------------------------
 %% gen_fsm Function Exports
@@ -18,18 +18,15 @@
          code_change/4]).
 
 % event handlers
--export([idle/3, running/3]).
+-export([running/3]).
 
 %% ------------------------------------------------------------------
 %% API Function Definitions
 %% ------------------------------------------------------------------
 
-start_link() ->
-    gen_fsm:start_link({local, ?SERVER}, ?MODULE, [], []).
-
-run(Callback, DB, Host, Port, Clients, Seconds) ->
-    Event = {run, {Callback, DB, Host, Port, Clients, Seconds}},
-    gen_fsm:sync_send_event(?SERVER, Event).
+start_link(DB, Host, Port, Clients, Seconds) ->
+    gen_fsm:start_link({local, ?SERVER}, ?MODULE,
+                       [DB, Host, Port, Clients, Seconds], []).
 
 cancel() ->
     gen_fsm:sync_send_event(?SERVER, cancel).
@@ -38,22 +35,18 @@ cancel() ->
 %% gen_fsm Function Definitions
 %% ------------------------------------------------------------------
 
-init(_Args) ->
-    {ok, idle, #state{}}.
-
-idle({run, {Callback, DB, Host, Port, Clients, Seconds}}, _, _State) ->
-    State2 = #state{callback=Callback,
-                   db=DB,
+init([DB, Host, Port, Clients, Seconds]) ->
+    State = #state{db=DB,
                    host=Host,
                    port=Port,
                    clients=Clients,
                    seconds=Seconds},
-    State3 = start_test(State2),
-    {reply, ok, running, State3}.
+    State2 = start_test(State),
+    {ok, running, State2}.
 
 running(cancel, _, State) ->
-    State2 = stop_test(cancel, State),
-    {reply, ok, idle, State2}.
+    State2 = stop_test(State),
+    {stop, ok, cancel, State2}.
 
 handle_event(Event, StateName, _State) ->
     % crash an unknown event
@@ -64,8 +57,8 @@ handle_sync_event(Event, From, StateName, _State) ->
     exit({error, {invalid_sync_event, {Event, From, StateName}}}).
 
 handle_info(timer_done, running, State) ->
-    stop_test(done, State),
-    {next_state, idle, #state{}}.
+    stop_test(State),
+    {stop, normal, #state{}}.
 
 terminate(_Reason, _StateName, _State) ->
     ok.
@@ -92,11 +85,9 @@ start_test(State) ->
     % TODO: Run the test
     State.
 
-stop_test(Reason, #state{callback=CB} = State) ->
+stop_test(State) ->
     ok = wsdemo_stats:stop(),
     ok = wsdemo_server_logger:stop(),
     ok = wsdemo_logger:close(),
-
-    CB(Reason),
     % TODO: Stop the test
     State.

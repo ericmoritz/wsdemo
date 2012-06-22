@@ -111,9 +111,7 @@ collect_response(Port, MessageKey, Timeout) ->
         {Port, {data, {eol, <<MessageKey:KeyLen/binary, ":__message__:", Msg/binary>>}}} ->
             {message, Msg};
         {Port, {data, {eol, <<MessageKey:KeyLen/binary, ":__error__:", Error/binary>>}}} ->        
-            {error, Error};
-        Other ->
-            exit({MessageKey, KeyLen, Other})
+            {error, Error}
     %% Prevent the gen_server from hanging indefinitely in case the
     %% spawned process is taking too long processing the request.
     after Timeout -> 

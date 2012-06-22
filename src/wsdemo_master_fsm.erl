@@ -1,7 +1,7 @@
 -module(wsdemo_master_fsm).
 -behaviour(gen_fsm).
 -define(SERVER, ?MODULE).
--record(state, {config, current, servers, callback}).
+-record(state, {config, current, servers, callback, runner}).
 
 %% ------------------------------------------------------------------
 %% API Function Exports
@@ -53,17 +53,26 @@ idle({run_suite, Callback, Config}, State) ->
     State2 = State#state{callback=Callback,
                          servers=Servers,
                          config=Config},
-    ok = do_warmup(State2),
-    {next_state, warmup, State2}.
+    State3 = do_warmup(State2),
+    {next_state, warmup, State3}.
 
 warmup(run_fulltest, State) ->
-    do_fulltest(State),
-    {next_state, fulltest, State}.
+    State2 = do_fulltest(State),
+    {next_state, fulltest, State2}.
 
-fulltest(next_server, #state{callback=CB, servers=[Previous|Rest]} = State) ->
-    % stop the previous server
-    stop_server(Previous),
+fulltest(next_server, State) ->
+    handle_event(next_server, fulltest, State).
 
+handle_event(cooldown, _StateName, State) ->
+    % stop the current server
+    wsdemo_server_manager:stop_server(),
+
+    % schedule the end of the cooldown phase
+    erlang:send_after(timer:seconds(15), self(), next_server),
+
+    error_logger:info_msg("Stopping ~s and cooling down for 15s~n", [State#state.current]),
+    {next_state, cooldown, State};
+handle_event(next_server, _StateName, #state{callback=CB, servers=[_|Rest]} = State) ->
     case Rest of
         [] ->
             CB(done),
@@ -72,21 +81,28 @@ fulltest(next_server, #state{callback=CB, servers=[Previous|Rest]} = State) ->
         Rest ->
             % pop off the current server and move to the warm up phase
             % for the next server
-            State2 = State#state{servers=Rest},
-            do_warmup(State2),
+            State2 = do_warmup(State#state{servers=Rest}),
             {next_state, warmup, State2}
     end.
-
-handle_event(Event, StateName, _State) ->
-    % crash an unknown event
-    exit({error, {invalid_event, {Event, StateName}}}).
 
 handle_sync_event(Event, From, StateName, _State) ->
     % crash an unknown event
     exit({error, {invalid_event, {Event, From, StateName}}}).
 
-handle_info(_Info, StateName, State) ->
-    {next_state, StateName, State}.
+
+% In 'warmup', a normal exit of the runner proc moves us to 'fulltest'
+handle_info({'EXIT', Pid, normal}, warmup, #state{runner=Pid} = State) ->
+    warmup(run_fulltest, State);
+% In 'fulltest', a normal exit of the runner proc moves us to 'cooldown'
+handle_info({'EXIT', Pid, normal}, fulltest, #state{runner=Pid} = State) ->
+    handle_event(cooldown, fulltest, State);
+% In any phase, an abnormal exit of the runner proc moves us to 'cooldown'
+handle_info({'EXIT', Pid, _Reason}, StateName, #state{runner=Pid} = State) ->
+    handle_event(cooldown, StateName, State);
+% A next_server message is sent when the cooldown is over
+handle_info(next_server, cooldown, State) ->
+    % skip the test if the runner crashes
+    handle_event(next_server, cooldown, State).
 
 terminate(_Reason, _StateName, _State) ->
     ok.
@@ -98,59 +114,36 @@ code_change(_OldVsn, StateName, State, _Extra) ->
 %% Internal Function Definitions
 %% ------------------------------------------------------------------
 start_server(ServerName) ->
-    error_logger:info_msg("Starting ~s~n", [ServerName]),
+    error_logger:info_msg("Starting ~s and waiting 15s for server init~n", [ServerName]),
     {message, <<"started">>} = wsdemo_server_manager:start_server(ServerName),
 
     % wait for the server to come up... TODO: Send a synchronous ping to the server
-    timer:sleep(5000).
+    timer:sleep(timer:seconds(15)).
 
-stop_server(ServerName) ->
-    error_logger:info_msg("Stopping Server ~s~n", [ServerName]),
-    wsdemo_server_manager:stop_server().
-    
-next_server() ->
-    gen_fsm:send_event(?SERVER, next_server).
-
-%% switch from warmup to the full test
-run_fulltest() ->
-    gen_fsm:send_event(?SERVER, run_fulltest).
-
-do_atest(Callback, DBName, TimeModifier, State) ->
+do_atest(DBName, Modifier, State) ->
     [Server|_] = State#state.servers,
     {_, DBRoot, Host, Port, Clients, Seconds} = State#state.config,
     DB = filename:join(DBRoot, DBName),
 
-    Seconds2 = trunc(Seconds * TimeModifier),
+    Clients2 = trunc(Clients * Modifier),
+    Seconds2 = trunc(Seconds * Modifier),
                   
     error_logger:info_msg("Testing ~p~n", [[{server, Server},
                                             {db, DB},
                                             {host, Host},
                                             {port, Port},
-                                            {clients, Clients},
+                                            {clients, Clients2},
                                             {seconds, Seconds2}]]),
-    ok = wsdemo_runner_fsm:run(Callback,
-                               DB, Host, Port, Clients, Seconds2).
+
+    {ok, Pid} = wsdemo_runner_fsm:start_link(DB, Host, Port, Clients, Seconds2),
+    State#state{current=Server, runner=Pid}.
     
 do_warmup(State) ->
-
-    WarmupCallback = fun(done) ->
-                             % send the full test event
-                             run_fulltest();
-                        (cancel) ->
-                             pass
-                 end,
-
     [Server|_] = State#state.servers,
     start_server(Server),
-    do_atest(WarmupCallback, Server ++ "-warmup", 0.1, State).
+    do_atest(Server ++ "-warmup", 0.1, State).
     
 
 do_fulltest(State) ->
-    FulltestCB = fun(done) ->
-                         % send the next_server event
-                         next_server();
-                    (cancel) ->
-                         pass
-                 end,
     [Server|_] = State#state.servers,
-    do_atest(FulltestCB, Server, 1, State).
+    do_atest(Server, 1, State).
