@@ -28,7 +28,7 @@ start_link() ->
     gen_fsm:start_link({local, ?SERVER}, ?MODULE, [], []).
 
 run_suite(Servers, Clients, Seconds) ->
-    run_suite(Servers, "/tmp", "localhost", 8000, Clients, Seconds).
+    run_suite(Servers, "/tmp", "127.0.0.1", 8000, Clients, Seconds).
 
 run_suite(Servers, DataRoot, Host, Port, Clients, Seconds) ->
     Callback = fun(R) ->
