@@ -20,7 +20,7 @@
                     "node-ws",
                     "perl-ev",
                     "python-tornado",
-                    "ruby-em-websockets",
-                    ]
+                    "ruby-em-websockets"
+                    ]}
         ]}
  ]}.
