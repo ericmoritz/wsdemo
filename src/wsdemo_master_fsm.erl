@@ -99,7 +99,7 @@ code_change(_OldVsn, StateName, State, _Extra) ->
 %% ------------------------------------------------------------------
 start_server(ServerName) ->
     error_logger:info_msg("Starting ~s~n", [ServerName]),
-    {message, "started"} = wsdemo_server_manager:start_server(ServerName),
+    {message, <<"started">>} = wsdemo_server_manager:start_server(ServerName),
 
     % wait for the server to come up... TODO: Send a synchronous ping to the server
     timer:sleep(5000).

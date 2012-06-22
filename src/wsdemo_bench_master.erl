@@ -87,7 +87,7 @@ start_server_and_runner(ServerName, #state{config=Config}) ->
     io:format("Testing ~s~n", [ServerName]),
 
     % start the server
-    {message, "started"} = wsdemo_server_manager:start_server(ServerName),
+    {message, <<"started">>} = wsdemo_server_manager:start_server(ServerName),
 
     % wait for the server to stop
     timer:sleep(5000),

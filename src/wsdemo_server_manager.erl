@@ -48,11 +48,11 @@ connections(HostAndPort) ->
 
 init(_) ->
     Port = open_port({spawn, "python priv/server_manager.py"},
-                     [{line, 255}, stream]),
+                     [{line, 255}, stream, binary]),
     {ok, #state{port=Port}}.
 
 handle_call({start_server, ServerName}, _From, State) ->
-    Reply = call_python(State#state.port, ["start ", ServerName]),
+    Reply = call_python(State#state.port, ["start:", ServerName]),
     {reply, Reply, State};
 handle_call(stop_server, _From, State) ->
     Reply = call_python(State#state.port, "stop"),
@@ -64,7 +64,7 @@ handle_call(memusage, _From, State) ->
 handle_call({connections, HostAndPort}, _From, State) ->
     {reply,
      call_python_int(State#state.port,
-                     ["connections ", HostAndPort]),
+                     ["connections:", HostAndPort]),
      State};
 handle_call(_Request, _From, State) ->
     {reply, ok, State}.
@@ -84,10 +84,13 @@ code_change(_OldVsn, State, _Extra) ->
 %% ------------------------------------------------------------------
 %% Internal Function Definitions
 %% ------------------------------------------------------------------
+message_key() ->
+    list_to_binary(erlang:ref_to_list(make_ref())).
+
 call_python_int(Port, Msg) ->
     case call_python(Port, Msg) of
         {message, IntString} ->
-            {ok, list_to_integer(IntString)};
+            {ok, list_to_integer(binary_to_list(IntString))};
         Other ->
             Other
     end.
@@ -96,16 +99,21 @@ call_python(Port, Msg) ->
     call_python(Port, Msg, 1000).
 
 call_python(Port, Msg, Timeout) ->
-    true = port_command(Port, [Msg, "\n"]),
-    collect_response(Port, Timeout).
+    MessageKey = message_key(),
+    true = port_command(Port, [MessageKey, ":", Msg, "\n"]),
+    collect_response(Port, MessageKey, Timeout).
 
-collect_response(Port, Timeout) ->
+collect_response(Port, MessageKey, Timeout) ->
     %% TODO: Add message refs
+    KeyLen = size(MessageKey),
+    
     receive
-        {Port, {data, {eol, "__message__:" ++ Msg}}} ->
+        {Port, {data, {eol, <<MessageKey:KeyLen/binary, ":__message__:", Msg/binary>>}}} ->
             {message, Msg};
-        {Port, {data, {eol, "__error__:" ++ Error}}} ->        
+        {Port, {data, {eol, <<MessageKey:KeyLen/binary, ":__error__:", Error/binary>>}}} ->        
             {error, Error};
+        Other ->
+            exit({MessageKey, KeyLen, Other})
     %% Prevent the gen_server from hanging indefinitely in case the
     %% spawned process is taking too long processing the request.
     after Timeout -> 
