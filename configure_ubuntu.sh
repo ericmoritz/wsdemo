@@ -43,5 +43,7 @@ sudo cabal install snap-server snap-core websockets websockets-snap
 sudo apt-get install -y libadns1-dev
 echo -e "y\ny\no conf prerequisites_policy follow\no conf commit" | sudo cpan
 sudo cpan Protocol::WebSocket
+sudo cpan YAML
+sudo cpan EV
 sudo cpan EV::ADNS
 yes | sudo cpan IO::Stream
