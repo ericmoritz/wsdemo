@@ -102,11 +102,11 @@ start_server(ServerName) ->
     {message, "started"} = wsdemo_server_manager:start_server(ServerName),
 
     % wait for the server to come up... TODO: Send a synchronous ping to the server
-    timer:sleep(1000).
+    timer:sleep(5000).
 
 stop_server(ServerName) ->
     error_logger:info_msg("Stopping Server ~s~n", [ServerName]),
-    {message, "server stopped"} = wsdemo_server_manager:stop_server().
+    wsdemo_server_manager:stop_server().
     
 next_server() ->
     gen_fsm:send_event(?SERVER, next_server).
