@@ -22,7 +22,7 @@ pushd wsdemo/competition
     fi
     curl http://python-distribute.org/distribute_setup.py | ./pypy-1.9/bin/pypy
     ./pypy-1.9/bin/easy_install pip
-    ./pypy-1.9/bin/pip install tornado ws4py
+    ./pypy-1.9/bin/pip install tornado ws4py twisted txws
 popd
 
 # install Node
