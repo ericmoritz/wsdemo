@@ -1,5 +1,16 @@
 from multiprocessing import cpu_count
-from os              import fork
+from os              import fork, getpid
+from random          import seed
+from time            import time
+from binascii        import hexlify
+
+def _reseed_random():
+    try:
+        from os import urandom
+        s = long( hexlify( urandom(16) ), 16)
+    except (NotImplementedError, ImportError):
+        s = int(time() * 1000) ^ getpid()
+    seed( s )
 
 def prefork( num=None, fork=fork ):
     """ Forks current process num times.
@@ -13,5 +24,6 @@ def prefork( num=None, fork=fork ):
         if pid:
             pids.append( pid )
         else:
+            _reseed_random()
             break
     return pids
