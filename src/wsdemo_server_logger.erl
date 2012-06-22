@@ -46,11 +46,18 @@ handle_cast(_Msg, State) ->
     {noreply, State}.
 
 handle_info(log_stats, HostAndPort) ->
-    {ok, RSS} = wsdemo_server_manager:memusage(),
-    {ok, Connections} = wsdemo_server_manager:connections(HostAndPort),
-
-    wsdemo_logger:event({server, {rss, RSS}}),
-    wsdemo_logger:event({server, {connections, Connections}}),
+    case wsdemo_server_manager:memusage() of
+        {ok, RSS} ->
+            wsdemo_logger:event({server, {rss, RSS}});
+        O ->
+            error_logger:warning_msg("Memusage: ~p~n", [O])
+    end,
+    case wsdemo_server_manager:connections(HostAndPort) of
+        {ok, Connections} ->
+            wsdemo_logger:event({server, {connections, Connections}});
+        O2 ->
+            error_logger:warning_msg("Connections: ~p~n", [O2])
+    end,
 
     erlang:send_after(timer:seconds(1), self(), log_stats),
     {noreply, HostAndPort}.
