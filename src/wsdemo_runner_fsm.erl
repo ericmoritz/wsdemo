@@ -79,8 +79,9 @@ code_change(_OldVsn, StateName, State, _Extra) ->
 
 start_test(State) ->
     error_logger:info_msg("Testing ~p~n", [State]),
-
     {ok, _} = wsdemo_logger:start_link(State#state.db),
+    {ok, _} = wsdemo_server_logger:start_link(State#state.host,
+                                              State#state.port),
     {ok, _} = wsdemo_stats:start_link(State#state.host,
                                       State#state.port,
                                       State#state.clients),
@@ -93,6 +94,7 @@ start_test(State) ->
 
 stop_test(Reason, #state{callback=CB} = State) ->
     ok = wsdemo_stats:stop(),
+    ok = wsdemo_server_logger:stop(),
     ok = wsdemo_logger:close(),
 
     CB(Reason),
