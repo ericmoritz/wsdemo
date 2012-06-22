@@ -12,6 +12,7 @@
   {mod, { wsdemo_bench_app, []}},
   {env, [
          {servers, [
+                    "clojure-aleph",
                     "erlang-cowboy",
                     "go-gonet",
                     "haskell-snap",
@@ -19,7 +20,16 @@
                     "node-ws-cluster",
                     "node-ws",
                     "perl-ev",
-                    "python-tornado",
+                    "pypy-tornado-1",
+                    "pypy-tornado-N",
+                    "pypy-twisted-1",
+                    "pypy-twisted-N",
+                    "python-gevent-websocket-1",
+                    "python-gevent-websocket-N",
+                    "python-tornado-1",
+                    "python-tornado-N",
+                    "python-twisted-1",
+                    "python-twisted-N",
                     "ruby-em-websockets"
                     ]}
         ]}
