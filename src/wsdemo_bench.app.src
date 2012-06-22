@@ -10,5 +10,17 @@
                   stdlib
                  ]},
   {mod, { wsdemo_bench_app, []}},
-  {env, []}
+  {env, [
+         {servers, [
+                    "erlang-cowboy",
+                    "go-gonet",
+                    "haskell-snap",
+                    "java-webbit",
+                    "node-ws-cluster",
+                    "node-ws",
+                    "perl-ev",
+                    "python-tornado",
+                    "ruby-em-websockets",
+                    ]
+        ]}
  ]}.
