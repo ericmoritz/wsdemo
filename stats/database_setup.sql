@@ -8,50 +8,20 @@ CREATE TABLE handshakes (
     elapsed     BIGINT
 );
 
-CREATE VIEW handshakes_simple AS
-    SELECT framework, timestamp, elapsed / 1000 AS elapsed_ms
-    FROM handshakes;
-
-CREATE TABLE handshakes_freq (
-    framework   VARCHAR(20),
-    elapsed_ms  INTEGER,
-    n           INTEGER
-);
-
-CREATE VIEW handshake_start_time AS
-  SELECT framework, min(timestamp) AS begin
-  FROM handshakes
-  GROUP by framework;
-
--- Essentially a materialized view
-CREATE TABLE handshake_start_times (
-    framework   VARCHAR(20),
-    begin       BIGINT
-);
-
 CREATE TABLE latencies (
     framework   VARCHAR(20),
     timestamp   BIGINT,
     elapsed     BIGINT
 );
 
-CREATE VIEW latencies_simple AS
-    SELECT framework, timestamp, elapsed / 1000 AS elapsed_ms
-    FROM latencies;
-
-CREATE VIEW latencies_start_time AS
-  SELECT framework, min(timestamp) AS begin
+CREATE VIEW latencies_sample AS
+  SELECT *
   FROM latencies
-  GROUP by framework;
+  WHERE random() < 0.1;
 
-CREATE TABLE latencies_start_times (
-    framework   VARCHAR(20),
-    begin       BIGINT
-);
-
-CREATE TABLE latencies_freq (
-    framework   VARCHAR(20),
-    elapsed_ms  INTEGER,
-    n           INTEGER
+CREATE TABLE latencies_small (
+    framework  VARCHAR(20),
+    timestamp  BIGINT,
+    elapsed    BIGINT
 );
 

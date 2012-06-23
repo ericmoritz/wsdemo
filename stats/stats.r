@@ -40,19 +40,6 @@ ws.plot.conn_timeout <- function() {
                                        colour = "grey50")))
 }
 
-# Jitter plot of the handshake times
-ws.plot.jitter <- function(T) {
-    box <- ggplot(T, aes(factor(framework), elapsed_ms))
-    (box + geom_jitter(alpha = 0.08) + coord_trans(y = "log10")
-       + xlab('Framework')
-       + ylab('Handshake Time (ms)')
-       + opts(axis.ticks = theme_blank(),
-              axis.text.x = theme_text(size = base_size * 0.8,
-                                       angle = 330,
-                                       hjust = 0,
-                                       colour = "grey50")))
-}
-
 ws.plot.box <- function(T) {
     box <- ggplot(T, aes(x = factor(framework), y = elapsed_ms))
     (box + geom_jitter(alpha = 0.2, size = 0.9) + geom_boxplot(outlier.shape = NA, alpha=0.5) + coord_trans(y = "log10")
@@ -81,17 +68,6 @@ ws.plot.volcano <- function(T) {
 pdf("stat_results/conn_timeouts.pdf")
 ws.plot.conn_timeout()
 dev.off()
-png("stat_results/conn_timeouts.png")
-ws.plot.conn_timeout()
-dev.off()
-
-# Handshake Jitter
-pdf("stat_results/handshake_jitter.pdf")
-ws.plot.jitter(handshake)
-dev.off()
-png("stat_results/handshake_jitter.png")
-ws.plot.jitter(handshake)
-dev.off()
 
 # Handshake Volcano
 pdf("stat_results/handshake_volcano.pdf", width=15)
@@ -100,9 +76,6 @@ dev.off()
 
 # Handshake Box
 pdf("stat_results/handshake_box.pdf")
-ws.plot.box(handshake)
-dev.off()
-png("stat_results/handshake_box.png")
 ws.plot.box(handshake)
 dev.off()
 
