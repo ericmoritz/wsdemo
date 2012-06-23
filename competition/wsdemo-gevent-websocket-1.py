@@ -4,13 +4,15 @@ from geventwebsocket.handler import WebSocketHandler
 def connection( env, start ):
     ws = env["wsgi.websocket"]
     send, rcv = ws.send, ws.receive
-    while True: send( rcv() )
+    try:
+        while True: send( rcv() )
+    except:
+        pass
 
 if __name__ == "__main__":
     addr   = "0.0.0.0", 8000
-    server = WSGIServer(addr, connection, handler_class=WebSocketHandler, log=None)
+    server = WSGIServer(addr, connection, handler_class=WebSocketHandler, backlog=768, log=None)
 
-    # bind socket
     if hasattr( server, 'pre_start' ):
         server.pre_start()
     else:
@@ -18,7 +20,4 @@ if __name__ == "__main__":
 
     print "Gevent + gevent-websocket (1 worker)"
 
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        server.stop()
+    server.serve_forever()
