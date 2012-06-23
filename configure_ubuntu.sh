@@ -28,12 +28,10 @@ popd
 # install Node
 mkdir src
 pushd src
-  if [ ! -d node-v0.7.11 ]; then
-     curl http://nodejs.org/dist/v0.7.11/node-v0.7.11.tar.gz | tar xz
-     pushd node-v0.7.11
-       ./configure && make && sudo make install
-     popd
-  fi
+  curl http://nodejs.org/dist/v0.7.12/node-v0.7.12.tar.gz | tar xz
+  pushd node-v0.7.12
+    ./configure && make && sudo make install
+  popd
 popd
 
 npm install websocket ws
