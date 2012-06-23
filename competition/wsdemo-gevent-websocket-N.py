@@ -22,7 +22,7 @@ if __name__ == "__main__":
         server.init_socket()
 
     num = cpu_count()
-    print "Gevent + gevent-websocket (%s workers)" % (num+1)
+    print "Gevent + gevent-websocket (%s workers)" % num
     if prefork( num, fork=fork ): exit()  # gevent needs a special fork
 
     server.serve_forever()

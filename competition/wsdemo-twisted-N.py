@@ -12,7 +12,7 @@ class EchoFactory( Factory ):
         return Echo()
 
 if __name__ == "__main__":
-    listenTCP(8000, WebSocketFactory( EchoFactory() ), backlog=2500)
+    listenTCP(8000, WebSocketFactory( EchoFactory() ), backlog=768)
 
     num = cpu_count()
     print "Twisted + txWS (%s workers)" % num
