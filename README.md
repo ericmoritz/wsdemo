@@ -16,19 +16,32 @@ Added any instructions needed to install dependencies in
 `configure_ubuntu-12.04.sh`.  Add any build instructions to
 `competition/Makefile` if your project needs to be compiled
 
-Include a bash script in `competition/` that will start your server in
-the most ideal way, with any optimization flags needed, etc. The name
-of the script should take the following format:
+wsdemo_bench utilizes [supervisord](http://supervisord.org/) to start
+and stop the servers while running the tests.  In order to include
+your server in the test you need to create a supervisord ini file in
+`competition/servers`.  
 
-    server-{language}-{platform}.sh
+    [program:%(server_name)s]
+    command=%(command)s
+    autostart=false
+    autorestart=false
+    startretries=0
+    stopasgroup=true
+    killasgroup=true
+    
+The server name must follow the following format:
+
+    {language}-{platform}
 
 For instance if you wrote an echo server using `bash` and `nc` the
-filename would be `competition/server-bash-nc.sh`.  
+srver name would be `bash-nc`.  You can add additional demarcations if
+needed.  For instance the Python tornado example has a single threaded
+and a multiprocessor version which go by the name `python-tornado-1`
+and `python-tornado-N`.
 
-Finally add an entry into `./bin/run_all_tests.sh` for instance, for
-our fictitious bash/nc server, the addition would be:
+Finally you need to add your server to the server list in
+`wsdemo_bench.app.src` configuration file.
 
-    do_test "bash-nc"
 
 ## Running the benchmark
 
@@ -57,14 +70,53 @@ be:
 
     ./runtest data/myserver 60 192.168.1.5 8000 1000
 
+
+## Running the entire suite on your own servers
+
+There are two components in wsdemo_bench. The first component is
+`supervisord`
+
+wsdemo_bench communications with Supervisord to start and stop each
+server before each benchmark.
+
+On the machine that you are running the servers on do the following:
+
+    sudo bash
+    ulimit -n 999999
+    cd competition
+    supervisord
+
+You can monitor supervisord by using it's `supervisorctl` command:
+
+    competition/ $ supervisorctl
+
+
+Next, on the client machine create a `config/demo.config` file:
+
+    [
+        {sasl, [
+            {sasl_error_logger, {file, LogFile}}]},
+
+        {wsdemo_bench, [
+                    {host, Ip},
+                    {port, 8000},
+                    {db_root, DbRoot},
+                    {clients, 100},
+                    {seconds, 10},
+                    {supervisord, {ServerHost, 9001}}]}].
+    
+This will configure the test using 100 clients for
+10 seconds each test. 
+
+Replace `Ip`, `DbRoot` and  `ServerHost` with the correct values.
+
 To do the full benchmark of all the servers, on the client machine run:
 
     sudo bash
     ulimit -n 999999
-    ./bin/run_all_tests.sh
+    ./bin/run_all_tests.sh -config config/demo.config
 
-Then follow the instructions.  The entire benchmark takes over 60
-minutes of babysitting.
+If all goes well, you should see the suite running in front of your eyes.
 
 You may see client crashes while the tests are running. Crashes due to
 `connection_timeout` are due to a server unable to accept the incoming
@@ -72,11 +124,26 @@ TCP connection.  This is not cause for alarm. If you see anything
 crashing because of a `/{error, .+}/`, this is an unexpected crash of
 the client and should be investigated.
 
+## Suite config
+
+Here is the full spec for the wsdemo_bench config:
+
+     [
+        {host, Host :: string()},
+        {port, Port :: integer()},
+        {db_root, DbRoot :: directory()},
+        {supervisord, {Host, 9001}},
+        {clients, number()}, % defaults to 10000
+        {seconds, number()}, % defaults to 600
+        {servers, [ServerName1::string(), ..., ServerNameN::string()]} % defaults to full suite
+     ]        
+
+
 ## Exporting the data
 
-The resulting `leveldb` databases will be placed in `data/`.  The
-events are stored as binary Erlang terms in the database so you will
-need to export the events to use them.
+The resulting `leveldb` databases will be placed in you configured
+`db_root`.  The events are stored as binary Erlang terms in the
+database so you will need to export the events to use them.
 
 There are two scripts to do that. `./bin/compile_all_stats.sh` and
 `./bin/convert_all_stats.sh`
@@ -88,25 +155,24 @@ There are two scripts to do that. `./bin/compile_all_stats.sh` and
    * message_latencies.csv - timestamp, elapsed usecs for each message
 
 `./bin/convert_all_stats.sh` dumps the raw events as a .csv tables in
-the `results/` directory..
+the `results/` directory.
 
 The events data has the following fields:
 
-    timestamp, type, client_id, event_id, event
+    timestamp, type, client_id, event_key, event_data
 
    * timestamp - The timestamp of the event
    * type - the server type
    * client_id - A string that identifies the client
-   * event_id - A string that links start and end events together
-   * event - A string that identifies the event
+   * event_key - The event type
+   * event_data - event specific data
 
-The `event_id` is used to pair `ws_init` and `ws_onopen` events to
-calculate the elapsed handshake time and the `event_id` is used to
+The `event_data` is used to pair `ws_init` and `ws_onopen` events to
+calculate the elapsed handshake time and the `event_data` is used to
 pair `send_message` events to `recv_message` events to calculate the
-elapsed message time.  The `event_id` for `'EXIT'` events take the
-format of `{pid(), Reason :: any()}` which is still unique for every
-`'EXIT'` event but serves a double purpose of allowing you to know the
-cause of the crash.  Here are the expected reasons:
+elapsed message time.  The `event_data` for `'EXIT'` events take the
+format of `{pid(), Reason :: any()}`. These are some of the expected
+reasons for a client crash:
 
     connection_timeout - The client could not establish a connection
                          with the server in under 2 seconds
@@ -116,7 +182,7 @@ cause of the crash.  Here are the expected reasons:
                       likely a client error as my WS client is a very
                       bare bones version 13 client.
 
-Any reason other than this is an unexpected error and should be
+Any reason other than these are an unexpected error and should be
 [reported](https://github.com/ericmoritz/wsdemo/issues) as an issue.
 If you see a `{error, Reason}` you should probably file a bug report
 as well unless you can determine it is a server issue.

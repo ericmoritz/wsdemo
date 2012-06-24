@@ -12,6 +12,8 @@
   {mod, { wsdemo_bench_app, []}},
   {env, [
          {supervisord, {"localhost", 9001}},
+         {clients, 10000},
+         {seconds, 600},
          {servers, [
                     "clojure-aleph",
                     "erlang-cowboy",

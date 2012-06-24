@@ -12,6 +12,7 @@ competition/cljwsdemo/target/
 competition/log/*.log
 competition/node_modules
 competition/wsdemo-snap
+competition/wsdemo-go-gonet
 competition/pypy-1.9
 competition/supervisord.pid
 competition/wsdemo-go-gonet
