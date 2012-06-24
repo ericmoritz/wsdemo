@@ -1,1 +1,0 @@
-ruby wsdemo-em.rb
