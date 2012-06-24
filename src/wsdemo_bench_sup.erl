@@ -24,7 +24,8 @@ start_link() ->
 %% ===================================================================
 
 init([]) ->
-    {ok, { {one_for_all, 5, 60}, [
+    {ok, { {one_for_one, 5, 60}, [
+                                  ?CHILD(wsdemo_server_manager, worker),
                                   ?CHILD(wsdemo_master_fsm, worker)
                                  ]} }.
 

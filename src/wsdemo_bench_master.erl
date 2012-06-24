@@ -50,13 +50,13 @@ handle_info(timeout, #state{servers=[ServerName|Rest]}=State) ->
 handle_info({'EXIT', _Pid, normal}, #state{servers=[]}=State) ->
     % No more servers, we're done
     io:format("Stopping ~s~n", [State#state.current]),
-    wsdemo_server_manager:stop_server(),
+    wsdemo_server_manager:stop_server(State#state.current),
     io:format("Done.", []),
     {stop, normal, []};
 handle_info({'EXIT', _Pid, normal}, #state{servers=[ServerName|Rest]}=State) ->
     % Stop the existing server
     io:format("Stopping ~s~n", [State#state.current]),
-    wsdemo_server_manager:stop_server(),
+    wsdemo_server_manager:stop_server(State#state.current),
     
     % fire up the next server
     start_server_and_runner(ServerName, State),

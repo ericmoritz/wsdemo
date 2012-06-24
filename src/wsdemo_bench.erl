@@ -1,28 +1,9 @@
 -module(wsdemo_bench).
 
--export([start/0, run_sync/0, build_cluster/0, build_cluster/1]).
+-export([start/0, run_sync/0]).
 
 start() ->
     application:start(wsdemo_bench).
-
-
-build_cluster() ->
-    case application:get_env(nodes) of
-        {ok, Nodes} ->
-            build_cluster(Nodes),
-            global:sync(),
-            ok;
-        undefined ->
-            undefined
-    end.
-
-build_cluster(undefined) ->
-    ok;
-build_cluster([]) ->
-    ok;
-build_cluster([Node|Rest]) ->
-    pong = net_adm:ping(Node),
-    build_cluster(Rest).
 
 run_sync() ->
     Self = self(),

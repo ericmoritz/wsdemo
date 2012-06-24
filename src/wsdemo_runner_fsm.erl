@@ -1,13 +1,13 @@
 -module(wsdemo_runner_fsm).
 -behaviour(gen_fsm).
 -define(SERVER, ?MODULE).
--record(state, {db, host, port, clients, seconds}).
+-record(state, {server_name, db, host, port, clients, seconds}).
 
 %% ------------------------------------------------------------------
 %% API Function Exports
 %% ------------------------------------------------------------------
 
--export([start_link/5, cancel/0]).
+-export([start_link/6, cancel/0]).
 
 %% ------------------------------------------------------------------
 %% gen_fsm Function Exports
@@ -24,9 +24,9 @@
 %% API Function Definitions
 %% ------------------------------------------------------------------
 
-start_link(DB, Host, Port, Clients, Seconds) ->
+start_link(ServerName, DB, Host, Port, Clients, Seconds) ->
     gen_fsm:start_link({local, ?SERVER}, ?MODULE,
-                       [DB, Host, Port, Clients, Seconds], []).
+                       [ServerName, DB, Host, Port, Clients, Seconds], []).
 
 cancel() ->
     gen_fsm:sync_send_event(?SERVER, cancel).
@@ -35,8 +35,9 @@ cancel() ->
 %% gen_fsm Function Definitions
 %% ------------------------------------------------------------------
 
-init([DB, Host, Port, Clients, Seconds]) ->
-    State = #state{db=DB,
+init([ServerName, DB, Host, Port, Clients, Seconds]) ->
+    State = #state{server_name=ServerName,
+                   db=DB,
                    host=Host,
                    port=Port,
                    clients=Clients,
@@ -74,7 +75,8 @@ start_test(State) ->
     error_logger:info_msg("Testing ~p~n", [State]),
     {ok, _} = wsdemo_logger:start_link(State#state.db),
     {ok, _} = wsdemo_server_logger:start_link(State#state.host,
-                                              State#state.port),
+                                              State#state.port,
+                                              State#state.server_name),
     {ok, _} = wsdemo_stats:start_link(State#state.host,
                                       State#state.port,
                                       State#state.clients),
