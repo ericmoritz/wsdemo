@@ -8,16 +8,38 @@ CREATE TABLE handshakes (
     elapsed     BIGINT
 );
 
+CREATE VIEW handshakes_min AS
+  SELECT framework, min(timestamp) AS min_timestamp
+  FROM handshakes
+  GROUP BY framework;
+
+CREATE OR REPLACE VIEW handshakes_skew AS
+  SELECT l.framework as framework
+       , l.timestamp - lm.min_timestamp as timestamp
+       , l.elapsed as elapsed
+  FROM handshakes l INNER JOIN handshakes_min lm ON (l.framework = lm.framework);
+
 CREATE TABLE latencies (
     framework   VARCHAR(20),
     timestamp   BIGINT,
     elapsed     BIGINT
 );
 
+CREATE VIEW latencies_min AS
+  SELECT framework, min(timestamp) as min_timestamp
+  FROM latencies
+  GROUP BY framework;
+
+CREATE OR REPLACE VIEW latencies_skew AS
+  SELECT l.framework as framework
+       , l.timestamp - lm.min_timestamp as timestamp
+       , l.elapsed as elapsed
+  FROM latencies l INNER JOIN latencies_min lm ON (l.framework = lm.framework);
+
 CREATE VIEW latencies_sample AS
   SELECT *
   FROM latencies
-  WHERE random() < 0.1;
+  WHERE random() < 0.01;
 
 CREATE TABLE latencies_small (
     framework  VARCHAR(20),
