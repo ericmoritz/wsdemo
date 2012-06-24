@@ -23,7 +23,7 @@ def get_connections(hostname):
     
         
 def get_rss(pid):
-    return sum(map(int,subprocess.check_output(["ps", "-o rss=", "-g", str(pid)]).split()))
+    return sum(map(int,subprocess.check_output(["ps", "-o rss=", "-g", str(pid), "-p", str(pid)]).split()))
 
 
 class WSDemoMonitor(rpcinterface.SupervisorNamespaceRPCInterface):
