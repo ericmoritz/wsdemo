@@ -71,12 +71,10 @@ handle_call({stop_server, ServerName}, _From, State) ->
     {reply, rpc_stop_server(ServerName, State), State};
 handle_call({status, ServerName}, _From, State) ->
     {reply, rpc_status(ServerName, State), State};
-handle_call({memusage, _ServerName}, _From, State) ->
-    % TODO
-    {reply, {ok, 0}, State};
-handle_call({connections, _HostAndPort}, _From, State) ->
-    % TODO
-    {reply, {ok, 0}, State}.
+handle_call({memusage, ServerName}, _From, State) ->
+    {reply, rpc_call('wsdemo_monitor.memusage', [ServerName], State), State};
+handle_call({connections, HostAndPort}, _From, State) ->
+    {reply, rpc_call('wsdemo_monitor.connections', [HostAndPort], State), State}.
 
 handle_cast(_Msg, State) ->
     {noreply, State}.

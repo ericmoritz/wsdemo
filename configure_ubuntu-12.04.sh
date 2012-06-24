@@ -5,7 +5,7 @@ sudo apt-get install -y \
     curl emacs python-dev python-setuptools build-essential erlang-nox \
     libevent-dev git golang mercurial openjdk-7-jdk ruby rubygems haskell-platform
 
-sudo easy_install ws4py gevent gevent-websocket tornado twisted txws supervisor
+sudo easy_install pip ws4py gevent gevent-websocket tornado twisted txws supervisor
 
 # Clone master
 git clone git://github.com/ericmoritz/wsdemo.git wsdemo
@@ -13,6 +13,9 @@ git clone git://github.com/ericmoritz/wsdemo.git wsdemo
 # Update sysctl
 sudo cp wsdemo/etc/sysctl.conf /etc/
 sudo sysctl -p
+
+# install the wsdemo_monitor package
+sudo easy_install wsdemo/priv/wsdemo_monitor
 
 # install pypy
 pushd wsdemo/competition
