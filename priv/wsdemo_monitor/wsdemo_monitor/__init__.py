@@ -18,7 +18,7 @@ def fix_osx_ips(ip):
 def get_connections(hostname):
     lines = subprocess.check_output(["netstat", "-n"]).splitlines()
     rows = (line.split() for line in lines if "ESTABLISHED" in line)
-    rows = (row for row in rows if fix_osx_ips(row[4]) == hostname)
+    rows = (row for row in rows if fix_osx_ips(row[3]) == hostname)
     return len(list(rows))
     
         
