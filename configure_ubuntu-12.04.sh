@@ -31,8 +31,8 @@ popd
 # install Node
 mkdir src
 pushd src
-  curl http://nodejs.org/dist/v0.7.12/node-v0.7.12.tar.gz | tar xz
-  pushd node-v0.7.12
+  curl http://nodejs.org/dist/v0.8.0/node-v0.8.0.tar.gz | tar xz
+  pushd node-v0.8.0
     ./configure && make && sudo make install
   popd
 popd
