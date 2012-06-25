@@ -20,11 +20,11 @@ base_size <- 9
 con <- dbConnect(dbDriver("PostgreSQL"), dbname = 'wsdemo')
 
 counts <- read.csv("counts.csv", header=TRUE)
-handshake <- dbReadTable(con, "handshakes")
+handshake <- dbReadTable(con, "handshakes_skew")
 handshake <- transform(handshake, elapsed_ms = elapsed / 1000)
-# latencies <- dbReadTable(con, "latencies")
 
-#latencies <- read.csv("latencies.csv", header=TRUE)
+latencies <- dbReadTable(con, "latencies_small")
+latencies <- transform(latencies, elapsed_ms = elapsed / 1000)
 
 # A plot of the connection timeouts as a function
 ws.plot.conn_timeout <- function() {
@@ -40,28 +40,23 @@ ws.plot.conn_timeout <- function() {
                                        colour = "grey50")))
 }
 
-# Jitter plot of the handshake times
-ws.plot.jitter <- function(T) {
-    box <- ggplot(T, aes(factor(framework), elapsed_ms))
-    (box + geom_jitter(alpha = 0.08) + coord_trans(y = "log10")
+ws.plot.box <- function(T, Y) {
+    box <- ggplot(T, aes(x = factor(framework), y = elapsed_ms))
+    (box + geom_jitter(alpha = 0.2, size = 0.9) + geom_boxplot(outlier.shape = NA, alpha=0.5) + coord_trans(y = "log10")
        + xlab('Framework')
-       + ylab('Handshake Time (ms)')
-       + opts(axis.ticks = theme_blank(),
-              axis.text.x = theme_text(size = base_size * 0.8,
+       + ylab(Y)
+       + opts(axis.text.x = theme_text(size = base_size * 0.8,
                                        angle = 330,
                                        hjust = 0,
                                        colour = "grey50")))
 }
 
-ws.plot.box <- function(T) {
-    box <- ggplot(T, aes(x = factor(framework), y = elapsed_ms))
-    (box + geom_jitter(alpha = 0.2, size = 0.9) + geom_boxplot(outlier.shape = NA, alpha=0.5) + coord_trans(y = "log10")
-       + xlab('Framework')
-       + ylab('Handshake Time (ms)')
-       + opts(axis.text.x = theme_text(size = base_size * 0.8,
-                                       angle = 330,
-                                       hjust = 0,
-                                       colour = "grey50")))
+ws.plot.density <- function(T, Xlab) {
+    x <- ggplot(T, aes(x = elapsed_ms))
+    (x + geom_density()
+       + xlab(Xlab)
+       + facet_grid(framework ~ .) + scale_x_log10()
+       + opts(strip.text.y = theme_text()))
 }
 
 # Volcano
@@ -77,40 +72,10 @@ ws.plot.volcano <- function(T) {
 }
 
 ## BEGIN PLOTTING
-# Conn timeout
-pdf("stat_results/conn_timeouts.pdf")
+pdf("stat_results/results.pdf")
 ws.plot.conn_timeout()
+#ws.plot.box(handshake, 'Handshake time (ms)')
+ws.plot.density(latencies, 'Message Latency (ms)')
+#ws.plot.box(latencies, 'Message latency (ms)')
 dev.off()
-png("stat_results/conn_timeouts.png")
-ws.plot.conn_timeout()
-dev.off()
-
-# Handshake Jitter
-pdf("stat_results/handshake_jitter.pdf")
-ws.plot.jitter(handshake)
-dev.off()
-png("stat_results/handshake_jitter.png")
-ws.plot.jitter(handshake)
-dev.off()
-
-# Handshake Volcano
-pdf("stat_results/handshake_volcano.pdf", width=15)
-ws.plot.volcano(handshake)
-dev.off()
-
-# Handshake Box
-pdf("stat_results/handshake_box.pdf")
-ws.plot.box(handshake)
-dev.off()
-png("stat_results/handshake_box.png")
-ws.plot.box(handshake)
-dev.off()
-
-# Latencies Box
-# pdf("stat_results/latencies_box.pdf")
-# ws.plot.box(latencies)
-# dev.off()
-# png("stat_results/latencies_box.png")
-# ws.plot.box(latencies)
-# dev.off()
 

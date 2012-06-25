@@ -8,26 +8,16 @@ CREATE TABLE handshakes (
     elapsed     BIGINT
 );
 
-CREATE VIEW handshakes_simple AS
-    SELECT framework, timestamp, elapsed / 1000 AS elapsed_ms
-    FROM handshakes;
-
-CREATE TABLE handshakes_freq (
-    framework   VARCHAR(20),
-    elapsed_ms  INTEGER,
-    n           INTEGER
-);
-
-CREATE VIEW handshake_start_time AS
-  SELECT framework, min(timestamp) AS begin
+CREATE VIEW handshakes_min AS
+  SELECT framework, min(timestamp) AS min_timestamp
   FROM handshakes
-  GROUP by framework;
+  GROUP BY framework;
 
--- Essentially a materialized view
-CREATE TABLE handshake_start_times (
-    framework   VARCHAR(20),
-    begin       BIGINT
-);
+CREATE OR REPLACE VIEW handshakes_skew AS
+  SELECT l.framework as framework
+       , l.timestamp - lm.min_timestamp as timestamp
+       , l.elapsed as elapsed
+  FROM handshakes l INNER JOIN handshakes_min lm ON (l.framework = lm.framework);
 
 CREATE TABLE latencies (
     framework   VARCHAR(20),
@@ -35,23 +25,25 @@ CREATE TABLE latencies (
     elapsed     BIGINT
 );
 
-CREATE VIEW latencies_simple AS
-    SELECT framework, timestamp, elapsed / 1000 AS elapsed_ms
-    FROM latencies;
-
-CREATE VIEW latencies_start_time AS
-  SELECT framework, min(timestamp) AS begin
+CREATE VIEW latencies_min AS
+  SELECT framework, min(timestamp) as min_timestamp
   FROM latencies
-  GROUP by framework;
+  GROUP BY framework;
 
-CREATE TABLE latencies_start_times (
-    framework   VARCHAR(20),
-    begin       BIGINT
-);
+CREATE OR REPLACE VIEW latencies_skew AS
+  SELECT l.framework as framework
+       , l.timestamp - lm.min_timestamp as timestamp
+       , l.elapsed as elapsed
+  FROM latencies l INNER JOIN latencies_min lm ON (l.framework = lm.framework);
 
-CREATE TABLE latencies_freq (
-    framework   VARCHAR(20),
-    elapsed_ms  INTEGER,
-    n           INTEGER
+CREATE VIEW latencies_sample AS
+  SELECT *
+  FROM latencies
+  WHERE random() < 0.01;
+
+CREATE TABLE latencies_small (
+    framework  VARCHAR(20),
+    timestamp  BIGINT,
+    elapsed    BIGINT
 );
 

@@ -24,3 +24,14 @@
 \COPY latencies FROM '../data/python-tornado/message_latencies.csv' WITH CSV HEADER
 \COPY latencies FROM '../data/python-ws4py/message_latencies.csv' WITH CSV HEADER
 \COPY latencies FROM '../data/ruby-em-websockets/message_latencies.csv' WITH CSV HEADER
+
+-- Hand the tables a couple of indexes
+--  This speeds up queries considerably since there is stuff to hook onto
+--  for the query engine.
+CREATE INDEX handshakes_ts_idx ON handshakes(timestamp);
+CREATE INDEX handshakes_elapsed_idx ON handshakes(elapsed);
+CREATE INDEX latencies_ts_idx ON latencies(timestamp);
+CREATE INDEX latencies_elapsed_idx ON latencies(elapsed);
+CREATE INDEX latencies_fwrk ON latencies(framework);
+
+
