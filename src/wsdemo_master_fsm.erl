@@ -160,7 +160,7 @@ do_warmup(State) ->
             timer:sleep(timer:seconds(15)),
             {ok, do_atest("warmup", 0.1, State)};
         Error ->
-            error_logger:error_msg("Cound not start server ~s, moving onto next server~nReason: ~p~n", [Error]),
+            error_logger:error_msg("Cound not start server ~s, moving onto next server~nReason: ~p~n", [Server, Error]),
             Error
     end.
     
