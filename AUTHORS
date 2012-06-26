@@ -1,0 +1,28 @@
+I would like to take this opportunity to thank those that wrote the
+individual Websocket projects and wsdemo implementations:
+
+## wsdemo implementations
+
+ * Ravi Kotecha     - For the Clojure/Aleph implementation <https://github.com/r4vi>
+ * Alexander Glyzov - For the Twisted, Tornado and Gevent Python implementations <https://github.com/aglyzov>
+ * maqdev           - For the Play Frameware implementation <https://github.com/maqdev>
+ * Oliver Charles   - For the Haskell/Snap implementation <https://github.com/ocharles>
+ * Einar Otto Stangvik - For the Clustered ws/node.js implementation <https://github.com/einaros>
+ * Alex Efros          - For the Perl/EV implementation <https://github.com/powerman>
+
+## Websocket projects
+
+ * Joe Walnes          - For the Webbit project <http://webbitserver.org/>
+ * Jeffery Gelens      - For the gevent-websocket project <https://bitbucket.org/Jeffrey/gevent-websocket/>
+ * Corbin Simpson      - For the the txWS project <https://github.com/MostAwesomeDude/txWS>
+ * The Tornado team    - For the tornado.websocket module <http://www.tornadoweb.org/>
+ * Einar Otto Stangvik - For the ws node.js module <https://github.com/einaros/ws>
+ * Loïc Hoguin and Nine Nines - For the Erlang cowboy project <https://github.com/extend/cowboy>
+ * The go team         - For the net/websockets code <http://code.google.com/p/go/source/checkout?repo=net>
+ * Viacheslav Tykhanovskyi - For the Protocol::Websocket project <http://search.cpan.org/~vti/Protocol-WebSocket-0.00906/lib/Protocol/WebSocket.pm>
+ * Zach Tellman        - For the Clojure Aleph project <https://github.com/ztellman/aleph/>
+ * The Snap team       - For the Haskell Snap framework <http://snapframework.com/>
+
+## Other contributions
+
+  * Jesper Louis Andersen - For the stats/ code <https://github.com/jlouis>
