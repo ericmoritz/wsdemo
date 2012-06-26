@@ -32,8 +32,7 @@
                     "python-tornado-1",
                     "python-tornado-N",
                     "python-twisted-1",
-                    "python-twisted-N",
-                    "ruby-em-websockets"
+                    "python-twisted-N"
                     ]}
         ]}
  ]}.
