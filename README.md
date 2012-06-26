@@ -39,8 +39,10 @@ if needed.  For instance the Python tornado example has a single
 threaded version and a multiprocessor version which go by the name
 `python-tornado-1` and `python-tornado-N`.
 
-Finally you need to add your server to the server list in
+Next, you need to add your server to the server list in
 `wsdemo_bench.app.src` configuration file.
+
+Finally, add yourself to the AUTHORS file; you've earned it.
 
 ## Running the benchmark
 
