@@ -34,14 +34,13 @@ The server name must follow the following format:
     {language}-{platform}
 
 For instance if you wrote an echo server using `bash` and `nc` the
-srver name would be `bash-nc`.  You can add additional demarcations if
-needed.  For instance the Python tornado example has a single threaded
-and a multiprocessor version which go by the name `python-tornado-1`
-and `python-tornado-N`.
+server name would be `bash-nc`.  You can add additional demarcations
+if needed.  For instance the Python tornado example has a single
+threaded version and a multiprocessor version which go by the name
+`python-tornado-1` and `python-tornado-N`.
 
 Finally you need to add your server to the server list in
 `wsdemo_bench.app.src` configuration file.
-
 
 ## Running the benchmark
 
@@ -76,7 +75,7 @@ be:
 There are two components in wsdemo_bench. The first component is
 `supervisord`
 
-wsdemo_bench communications with Supervisord to start and stop each
+wsdemo_bench communicates with Supervisord to start and stop each
 server before each benchmark.
 
 On the machine that you are running the servers on do the following:
@@ -86,12 +85,12 @@ On the machine that you are running the servers on do the following:
     cd competition
     supervisord
 
-You can monitor supervisord by using it's `supervisorctl` command:
+You can monitor supervisord by using the `supervisorctl` command:
 
-    competition/ $ supervisorctl
+    competition/ $ supervisorctl status
 
 
-Next, on the client machine create a `config/demo.config` file:
+Next, on the client machine create a `config/small-scale.config` file:
 
     [
         {sasl, [
@@ -104,25 +103,41 @@ Next, on the client machine create a `config/demo.config` file:
                     {clients, 100},
                     {seconds, 10},
                     {supervisord, {ServerHost, 9001}}]}].
-    
-This will configure the test using 100 clients for
-10 seconds each test. 
 
-Replace `Ip`, `DbRoot` and  `ServerHost` with the correct values.
 
-To do the full benchmark of all the servers, on the client machine run:
+Replace `LogFile`, `Ip`, `DbRoot` and `ServerHost` with the correct
+values.  Ensure that both the path to `LogFile` and the path to
+`DbRoot` exist or the test will crash.
+   
+This configuration file describe a test using 100 clients for
+10 seconds each test. We will use this smaller test to ensure that all
+the servers start and stop properly.
+
+To run this benchmark, do the following:
 
     sudo bash
     ulimit -n 999999
-    ./bin/run_all_tests.sh -config config/demo.config
+    ./bin/run_all_tests.sh -config config/small-scale.config
 
-If all goes well, you should see the suite running in front of your eyes.
+If all goes well, you should see the suite running in front of your
+eyes.  Let that run for the entire test.  It should run for 12 minutes
+or so.
 
-You may see client crashes while the tests are running. Crashes due to
-`connection_timeout` are due to a server unable to accept the incoming
-TCP connection.  This is not cause for alarm. If you see anything
-crashing because of a `/{error, .+}/`, this is an unexpected crash of
-the client and should be investigated.
+If any of the servers crashes you can do the following to diagnose the cause:
+
+    competition/ $ supervisorctl tail $SERVER_NAME stderr
+
+After the small scale test, it is time to run the full scale test:
+
+    [
+        {sasl, [
+            {sasl_error_logger, {file, LogFile}}]},
+
+        {wsdemo_bench, [
+                    {host, Ip},
+                    {port, 8000},
+                    {db_root, DbRoot},
+                    {supervisord, {ServerHost, 9001}}]}].
 
 ## Suite config
 
@@ -141,7 +156,7 @@ Here is the full spec for the wsdemo_bench config:
 
 ## Exporting the data
 
-The resulting `leveldb` databases will be placed in you configured
+The resulting `leveldb` databases will be placed in your configured
 `db_root`.  The events are stored as binary Erlang terms in the
 database so you will need to export the events to use them.
 
@@ -154,8 +169,7 @@ There are two scripts to do that. `./bin/compile_all_stats.sh` and
    * handshake_times.csv - timestamp, elapsed usecs for each handshake
    * message_latencies.csv - timestamp, elapsed usecs for each message
 
-`./bin/convert_all_stats.sh` dumps the raw events as a .csv tables in
-the `results/` directory.
+`./bin/convert_all_stats.sh` dumps the raw events as a `events.csv` table.
 
 The events data has the following fields:
 
@@ -178,12 +192,8 @@ reasons for a client crash:
                          with the server in under 2 seconds
     normal - The server closed the connection.  This should never
              happen for this benchmark
-    {error, Reason} - Server or Client protocol error. It is most
-                      likely a client error as my WS client is a very
-                      bare bones version 13 client.
 
 Any reason other than these are an unexpected error and should be
 [reported](https://github.com/ericmoritz/wsdemo/issues) as an issue.
 If you see a `{error, Reason}` you should probably file a bug report
 as well unless you can determine it is a server issue.
-
