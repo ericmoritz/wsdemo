@@ -13,7 +13,7 @@
   {env, [
          {supervisord, {"localhost", 9001}},
          {clients, 10000},
-         {seconds, 600},
+         {seconds, 300},
          {servers, [
                     "clojure-aleph",
                     "erlang-cowboy",
