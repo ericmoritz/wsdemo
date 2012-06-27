@@ -37,7 +37,7 @@ timestamp({Mega, Secs, Micro}) ->
 
 
 write_head() ->
-    io:format("timestamp, type, client_id, event_key, event_data~n", []).
+    io:format("timestamp,type,client_id,event_key,event_data~n", []).
  
 write_record(TS, Type, Pid, EventKey, EventData) ->
     DataStr = case is_integer(EventData) of
@@ -46,7 +46,7 @@ write_record(TS, Type, Pid, EventKey, EventData) ->
                   true ->
                       integer_to_list(EventData)
               end,
-    io:format("~w, \"~s\", \"~w\", \"~w\", ~s~n",
+    io:format("~w,\"~s\",\"~w\",\"~w\",~s~n",
               [timestamp(TS), Type, Pid, EventKey, DataStr]).
 
     

@@ -17,14 +17,14 @@
                 counts=#counts{}}).
 
 write_stats_head(FH) ->
-    io:format(FH, "type, clients, handshakes, connection_timeouts, messages_sent, messages_recv, crashes~n", []).
+    io:format(FH, "type,clients,handshakes,connection_timeouts,messages_sent,messages_recv,crashes~n", []).
 
 write_stats(FH, 
             #state{counts=Counts, type=Type}) ->
     io:format(FH, "\"~s\"", [Type]),
     lists:foreach(fun(Field) ->
                           Val = element(Field, Counts),
-                          io:format(FH, ", ~w", [Val])
+                          io:format(FH, ",~w", [Val])
                   end,
                   [#counts.clients,
                    #counts.handshakes,
@@ -72,7 +72,7 @@ write_elapsed_time_head(FH) ->
 write_elapsed_time(Metric, Start, End, State) ->    
     FH = element(Metric, State),
     Elapsed = timer:now_diff(End, Start),
-    io:format(FH, "\"~s\", ~w, ~w~n", 
+    io:format(FH, "\"~s\",~w,~w~n", 
               [State#state.type, timestamp(End), Elapsed]).
     
 timestamp({Mega, Secs, Micro}) ->
