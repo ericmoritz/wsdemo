@@ -1,4 +1,4 @@
-all:
+build:
 	$(MAKE) -C wsdemo-playframework-2
 	erlc wsdemo.erl
 	javac -cp webbit-0.4.7-full.jar EchoWsServer.java
