@@ -7,8 +7,8 @@ var http = require('http')
 if (cluster.isMaster) {
   // Master Process
   var versionInfo = process.version.substr(1).split('.').map(function(v) { return parseInt(v); });
-  if (versionInfo[1] !== 7 || versionInfo[2] < 11) {
-    console.error('Please use node v0.7.11+\nAfter installing v0.7, please run "npm rebuild ws".');
+  if (versionInfo[1] !== 8) {
+    console.error('Please use node v0.8.0+\nAfter installing v0.8, please run "npm rebuild ws".');
     process.exit(-1);
   }
   for (var i = 0; i < numCPUs; i++) cluster.fork();
