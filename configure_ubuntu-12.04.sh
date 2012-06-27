@@ -37,6 +37,14 @@ pushd src
   popd
 popd
 
+# install Play
+pushd wsdemo/competition
+   if [ ! -d ./play-2.0.1 ]; then
+       curl -O http://download.playframework.org/releases/play-2.0.1.zip
+       unzip play-2.0.1.zip
+   fi
+popd
+
 npm install websocket ws
 sudo go get code.google.com/p/go.net/websocket
 sudo gem install em-websocket

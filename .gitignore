@@ -16,6 +16,11 @@ competition/wsdemo-go-gonet
 competition/pypy-1.9
 competition/supervisord.pid
 competition/wsdemo-go-gonet
+competition/play-2.0.1*
+competition/wsdemo-playframework-2/Makefile
+competition/wsdemo-playframework-2/project/target/
+competition/wsdemo-playframework-2/target/
+competition/wsdemo-playframework-2/wsdemo-1.0-SNAPSHOT/
 data/
 deps/
 dist/
