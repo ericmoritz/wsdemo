@@ -37,7 +37,7 @@ init([Hostname, Port, Clients]) ->
 
 handle_call(stop, _From, State) ->
     lists:foreach(fun(Pid) ->
-                          websocket_client:close(Pid)
+                          catch websocket_client:stop(Pid)
                   end, State#state.clients),
     {stop, normal, ok, State}.
 

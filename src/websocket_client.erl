@@ -17,7 +17,8 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/3,start_link/4,write/2,write_sync/2,close/1, frame/1, websocket_mask/2]).
+-export([start_link/3, start_link/4, stop/1,
+         write/2, write_sync/2, close/1, frame/1]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -46,10 +47,8 @@ start_link(Mod,Host,Port) ->
 start_link(Mod,Host,Port,Path) ->
     gen_server:start_link(?MODULE, [Mod,Host,Port,Path], []).
 
-init([Mod,Host,Port,Path]) ->
-    ModState = Mod:ws_init(),
-    {ok, #state{server={Host,Port,Path},
-                callback=Mod, callback_state=ModState}, 0}.
+stop(Pid) ->
+    gen_server:call(Pid, stop).
 
 %% Write to the server
 write(Pid, Data) ->
@@ -62,6 +61,11 @@ write_sync(ClientState, Data) ->
 %% Close the socket
 close(Pid) ->
     gen_server:cast(Pid,close).
+
+init([Mod,Host,Port,Path]) ->
+    ModState = Mod:ws_init(),
+    {ok, #state{server={Host,Port,Path},
+                callback=Mod, callback_state=ModState}, 0}.
 
 handle_cast({send,Data}, State) ->
     write_sync(State, Data),
@@ -149,6 +153,9 @@ handle_info(Msg, State) ->
     CBState = Mod:ws_info(State, Msg, State#state.callback_state),
     {noreply, State#state{callback_state=CBState}}.
   
+handle_call(stop, _From, State) ->
+    gen_tcp:close(State#state.socket),
+    {stop, normal, ok, State};
 handle_call(_Request,_From,State) ->
     {reply,ok,State}.
 

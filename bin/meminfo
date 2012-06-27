@@ -2,8 +2,8 @@ PIDS=`pgrep -f "$1"`
 
 while [ 1 ]
 do
-    NUMCON=`netstat -n | awk '/ESTABLISHED/ && $4=="10.196.187.15:8000"' | wc -l`
-    #MEM=`ps -o rss= -p $PIDS | python -c "import sys; print sum(int(x.strip()) for x in sys.stdin)"`
+    SCRIPT="/ESTABLISHED/ && \$4==\"$2\""
+    NUMCON=`netstat -n | awk "$SCRIPT" | wc -l`
     MEM=`ps -o rss= -p $PIDS | awk '{s+=$1} END {print s}'`
 
     echo -e "`date`\t`date +%s`\t$MEM\t$NUMCON"
