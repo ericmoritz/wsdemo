@@ -1,0 +1,38 @@
+% -*- erlang -*-
+
+{application, wsdemo_bench,
+ [
+  {description, ""},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {mod, { wsdemo_bench_app, []}},
+  {env, [
+         {supervisord, {"localhost", 9001}},
+         {clients, 10000},
+         {seconds, 300},
+         {servers, [
+                    "clojure-aleph",
+                    "erlang-cowboy",
+                    "go-gonet",
+                    "haskell-snap",
+                    "java-webbit",
+                    "node-ws-cluster",
+                    "node-ws",
+                    "perl-ev",
+                    "pypy-tornado-1",
+                    "pypy-tornado-N",
+                    "pypy-twisted-1",
+                    "pypy-twisted-N",
+                    "python-gevent-websocket-1",
+                    "python-gevent-websocket-N",
+                    "python-tornado-1",
+                    "python-tornado-N",
+                    "python-twisted-1",
+                    "python-twisted-N"
+                    ]}
+        ]}
+ ]}.

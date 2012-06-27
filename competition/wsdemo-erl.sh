@@ -1,1 +1,0 @@
-erl -pa ../ebin ../deps/*/ebin +K true -s wsdemo

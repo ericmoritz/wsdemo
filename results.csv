@@ -1,7 +1,0 @@
-implementation,connection.time,latency,messages,connections,timeouts
-Erlang,865,17,2849294,10000,0
-Haskell (Snap),168,227,1187413,4996,108
-Java (Webbit),567,835,1028390,4637,157
-Go,284,18503,2398180,9775,225
-Node.js (websocket),768,42580,1170847,5701,4299
-Python (ws4py),1561,34889,1052996,4792,5208

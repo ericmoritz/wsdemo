@@ -4,14 +4,17 @@
 
 -mode(compile).
 
-reducer({TS, {Event, Pid}}, Type) ->
-    write_record(TS, Type, Pid, Pid, Event),
+reducer({TS, {server, {EventKey, Data}}}, Type) ->
+    write_record(TS, Type, server, EventKey, Data),
     Type;
-reducer({TS, {'EXIT'=Event, Pid, Reason}}, Type) ->
-    write_record(TS, Type, Pid, {Pid, Reason}, Event),
+reducer({TS, {EventKey, Pid}}, Type) ->
+    write_record(TS, Type, Pid, EventKey, Pid),
     Type;
-reducer({TS, {Event, Pid, Ref}}, Type) ->
-    write_record(TS, Type, Pid, {Pid, Ref}, Event),
+reducer({TS, {'EXIT'=EventKey, Pid, Reason}}, Type) ->
+    write_record(TS, Type, Pid, EventKey, {Pid, Reason}),
+    Type;
+reducer({TS, {EventKey, Pid, Ref}}, Type) ->
+    write_record(TS, Type, Pid, EventKey, {Pid, Ref}),
     Type.
 
 main([Type, LogFile]) ->
@@ -34,10 +37,16 @@ timestamp({Mega, Secs, Micro}) ->
 
 
 write_head() ->
-    io:format("timestamp, type, client_id, event_id, event~n", []).
+    io:format("timestamp, type, client_id, event_key, event_data~n", []).
  
-write_record(TS, Type, Pid, EventKey, Event) ->
-    io:format("~w, \"~s\", \"~w\", \"~w\", \"~w\"~n",
-              [timestamp(TS), Type, Pid, EventKey, Event]).
+write_record(TS, Type, Pid, EventKey, EventData) ->
+    DataStr = case is_integer(EventData) of
+                  false ->
+                      io_lib:format("\"~w\"", [EventData]);
+                  true ->
+                      integer_to_list(EventData)
+              end,
+    io:format("~w, \"~s\", \"~w\", \"~w\", ~s~n",
+              [timestamp(TS), Type, Pid, EventKey, DataStr]).
 
     

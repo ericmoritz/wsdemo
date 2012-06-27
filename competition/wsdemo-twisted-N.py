@@ -12,10 +12,10 @@ class EchoFactory( Factory ):
         return Echo()
 
 if __name__ == "__main__":
-    listenTCP(8000, WebSocketFactory( EchoFactory() ))
+    listenTCP(8000, WebSocketFactory( EchoFactory() ), backlog=768)
 
     num = cpu_count()
-    print "Twisted + txWS (%s workers)" % (num+1)
-    prefork( num )
+    print "Twisted + txWS (%s workers)" % num
+    if prefork( num ): exit()
 
     run()

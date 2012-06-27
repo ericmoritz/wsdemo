@@ -11,7 +11,7 @@ class EchoFactory( Factory ):
         return Echo()
 
 if __name__ == "__main__":
-    listenTCP(8000, WebSocketFactory( EchoFactory() ))
+    listenTCP(8000, WebSocketFactory( EchoFactory() ), backlog=768)
 
     print "Twisted + txWS (1 worker)"
 

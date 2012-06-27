@@ -1,0 +1,9 @@
+setup.cfg
+setup.py
+wsdemo_monitor/__init__.py
+wsdemo_monitor.egg-info/PKG-INFO
+wsdemo_monitor.egg-info/SOURCES.txt
+wsdemo_monitor.egg-info/dependency_links.txt
+wsdemo_monitor.egg-info/entry_points.txt
+wsdemo_monitor.egg-info/not-zip-safe
+wsdemo_monitor.egg-info/top_level.txt

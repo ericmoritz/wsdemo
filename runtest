@@ -4,7 +4,9 @@
 
 -mode(compile).
 
-main([LogFile, SecondsStr, Server, PortStr, ClientsStr]) ->
+main([LogFile, ClientsStr, SecondsStr]) ->
+    main([LogFile, "localhost", "8000", ClientsStr, SecondsStr]);
+main([LogFile, Server, PortStr, ClientsStr, SecondsStr]) ->
     Port = list_to_integer(PortStr),
     Clients = list_to_integer(ClientsStr),
     Seconds = list_to_integer(SecondsStr),
@@ -18,23 +20,28 @@ main([LogFile, SecondsStr, Server, PortStr, ClientsStr]) ->
               [Clients, Seconds, LogFile]),
 
     {ok, _} = wsdemo_logger:start_link(LogFile),
-    spawn(fun() -> report_loop(erlang:now(), Seconds) end),
-
     {ok, _} = wsdemo_stats:start_link(Server, Port, Clients),
-    io:format("Running~n", []),
-    timer:sleep(timer:seconds(Seconds)),
-    io:format("Finished~n", []),
-    wsdemo_logger:close(),
-    ok;
-main([LogFile, SecondsStr, ClientsStr]) ->
-    main([LogFile, SecondsStr, "localhost", "8000", ClientsStr]);
+    
+    spawn(fun() ->
+                  report_loop(now(), Seconds)
+          end),
+    erlang:send_after(timer:seconds(Seconds), self(), done),
+
+    receive 
+        done ->
+            wsdemo_stats:stop(),
+            wsdemo_logger:close(),
+            done
+    end;
+
 main(_) ->
     usage().
 
+
 usage() ->
     io:format("usage: ~n"
-     "runtest LogFile::string() Seconds::integer() ClientCount::integer() | ~n"
-     "runtest LogFile::string() Seconds::integer() Server::string() Port::integer() ClientCount::integer()~n", []).
+     "runtest LogFile::string() ClientCount::integer() Seconds::integer() | ~n"
+     "runtest LogFile::string() Server::string() Port::integer() ClientCount::integer() Seconds::integer()~n", []).
 
 report_loop(Start, Seconds) ->
     case whereis(wsdemo_logger) of
