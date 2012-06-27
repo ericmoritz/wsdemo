@@ -20,8 +20,8 @@
                     "go-gonet",
                     "haskell-snap",
                     "java-webbit",
-                    "node-ws-cluster",
                     "node-ws",
+                    "node-ws-cluster",
                     "perl-ev",
                     "pypy-tornado-1",
                     "pypy-tornado-N",
@@ -32,7 +32,8 @@
                     "python-tornado-1",
                     "python-tornado-N",
                     "python-twisted-1",
-                    "python-twisted-N"
+                    "python-twisted-N",
+                    "scala-play"
                     ]}
         ]}
  ]}.
