@@ -3,7 +3,7 @@
 
 -- Handshake data
 CREATE TABLE handshakes (
-    framework   VARCHAR(20),
+    framework   VARCHAR(30),
     timestamp   BIGINT,
     elapsed     BIGINT
 );
@@ -20,7 +20,7 @@ CREATE OR REPLACE VIEW handshakes_skew AS
   FROM handshakes l INNER JOIN handshakes_min lm ON (l.framework = lm.framework);
 
 CREATE TABLE latencies (
-    framework   VARCHAR(20),
+    framework   VARCHAR(30),
     timestamp   BIGINT,
     elapsed     BIGINT
 );
@@ -42,8 +42,16 @@ CREATE VIEW latencies_sample AS
   WHERE random() < 0.01;
 
 CREATE TABLE latencies_small (
-    framework  VARCHAR(20),
+    framework  VARCHAR(30),
     timestamp  BIGINT,
     elapsed    BIGINT
+);
+
+CREATE TABLE events (
+    timestamp  BIGINT,
+    framework  VARCHAR(30),
+    client_id  VARCHAR(20),
+    event_key  VARCHAR(20),
+    event_data TEXT
 );
 
