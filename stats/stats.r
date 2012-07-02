@@ -26,6 +26,15 @@ handshake <- transform(handshake, elapsed_ms = elapsed / 1000)
 latencies <- dbReadTable(con, "latencies_small")
 latencies <- transform(latencies, elapsed_ms = elapsed / 1000)
 
+options <- opts(axis.text.x = theme_text(size = base_size * 0.8,
+                                         angle = 330,
+                                         hjust = 0,
+                                         colour = "grey50"),
+                axis.text.x = theme_text(size = base_size * 0.5),
+                axis.text.y = theme_text(size = base_size * 0.5),
+                strip.text.x = theme_text(size = base_size * 0.5))
+
+
 # A plot of the connection timeouts as a function
 ws.plot.conn_timeout <- function() {
     conn_timeouts <- ggplot(counts, aes(x = framework, y = connection_timeouts))
@@ -33,49 +42,50 @@ ws.plot.conn_timeout <- function() {
        + geom_bar()
        + xlab('Framework')
        + ylab('Connections Lost')
-       + opts(axis.ticks = theme_blank(),
-              axis.text.x = theme_text(size = base_size * 0.8,
-                                       angle = 330,
-                                       hjust = 0,
-                                       colour = "grey50")))
+       + options)
+}
+
+ws.plot.bin2d <- function(T, YLab) {
+   dots <- ggplot(T, aes(x=timestamp/1000000, y=elapsed/1000))
+   (dots
+     + facet_wrap(~ framework) 
+     + ylab(YLab)
+     + xlab('Second')
+     + stat_bin2d()
+     + options)
 }
 
 ws.plot.box <- function(T, Y) {
-    box <- ggplot(T, aes(x = factor(framework), y = elapsed_ms))
-    (box + geom_jitter(alpha = 0.2, size = 0.9) + geom_boxplot(outlier.shape = NA, alpha=0.5) + coord_trans(y = "log10")
+    box <- ggplot(T, aes(x = factor(framework), y = elapsed/1000))
+    (box 
+       + geom_boxplot(outlier.shape = NA, alpha=0.5)
+       + scale_y_log10()
        + xlab('Framework')
        + ylab(Y)
-       + opts(axis.text.x = theme_text(size = base_size * 0.8,
-                                       angle = 330,
-                                       hjust = 0,
-                                       colour = "grey50")))
+       + options)
 }
 
-ws.plot.density <- function(T, Xlab) {
+ws.plot.histogram <- function(T, Xlab) {
     x <- ggplot(T, aes(x = elapsed_ms))
-    (x + geom_density()
+    (x + geom_histogram()
        + xlab(Xlab)
-       + facet_grid(framework ~ .) + scale_x_log10()
-       + opts(strip.text.y = theme_text()))
-}
-
-# Volcano
-ws.plot.volcano <- function(T) {
-    v <- ggplot(T, aes(x = log10(elapsed_ms)))
-    (v      + stat_density(aes(ymax = ..density..,  ymin = -..density..),
-                           fill = "grey50",
-                           colour = "grey50",
-                           geom = "ribbon",
-                           position = "identity")
-            + facet_grid(. ~ framework)
-            + coord_flip())
+       + scale_x_log10()
+       + facet_wrap(~ framework) 
+       + options)
 }
 
 ## BEGIN PLOTTING
 pdf("stat_results/results.pdf")
+
 ws.plot.conn_timeout()
-#ws.plot.box(handshake, 'Handshake time (ms)')
-ws.plot.density(latencies, 'Message Latency (ms)')
-#ws.plot.box(latencies, 'Message latency (ms)')
+
+ws.plot.box(handshake, 'Handshake time (ms)')
+ws.plot.histogram(handshake, 'Handshake time (ms)')
+ws.plot.bin2d(handshake, 'Handshake time (ms)')
+
+ws.plot.box(latencies, 'Message latency (ms)')
+ws.plot.histogram(latencies, 'Message latency (ms)')
+ws.plot.bin2d(latencies, 'Message latency (ms)')
+
 dev.off()
 
