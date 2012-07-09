@@ -20,7 +20,7 @@ competition/play-2.0.1*
 competition/wsdemo-playframework-2/project/target/
 competition/wsdemo-playframework-2/target/
 competition/wsdemo-playframework-2/wsdemo-1.0-SNAPSHOT/
-data/
+data
 deps/
 dist/
 ebin/
@@ -28,7 +28,7 @@ node_modules
 results/
 stats/*.Rout
 stats/*.csv
+stats/db
 stats/stat_results/
 Vagrantfile
 erl_crash.dump
-
