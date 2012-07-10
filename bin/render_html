@@ -1,0 +1,79 @@
+#!/usr/bin/env escript
+%% -*- erlang -*-
+%%! -smp enable
+-mode(compile).
+
+compile_template() ->
+    erlydtl:compile(<<"<table>
+  <tr>
+     <th>Implementation</th>
+     <th>Handshake Time (mean)</th>
+     <th>Handshake Time (median)</th>
+     <th>Handshake Time (95%)</th>
+     <th>Handshake Time (99%)</th>
+     <th>Handshake Time (99.9%)</th>
+     <th>Latency (mean)</th>
+     <th>Latency (median)</th>
+     <th>Latency (95%)</th>
+     <th>Latency (99%)</th>
+     <th>Latency (99.9%)</th>
+     <th>Connection Timeouts</th>
+  </tr>
+  {% for row in rows %}<tr>{% for col in row %}
+     <td>{{ col }}</td>{% endfor %}
+  </tr>{% endfor %}
+</table>">>, histogram_tmpl).
+    
+
+histogram_columns(Histogram) ->
+    Mean = proplists:get_value(arithmetic_mean, Histogram),
+    Median = proplists:get_value(median, Histogram),
+    Percentile = proplists:get_value(percentile, Histogram),
+    [_, {95, P95}, {99, P99}, {999, P999}] = Percentile,
+    [Mean, Median, P95, P99, P999].
+
+columns(ServerName, Histograms, ConnectionTimeouts) ->
+    Columns = [
+               list_to_binary(ServerName),
+               histogram_columns(proplists:get_value(handshake_times, Histograms)),
+               histogram_columns(proplists:get_value(message_latencies, Histograms)),
+               ConnectionTimeouts],
+    lists:flatten(Columns).
+
+row_score(Row) ->
+    [_ServerName, 
+     HSMean, _HSMedian, _HSP95, _HSP99, _HSP999, 
+     MLMean, _MLMedian, _MLP95, _MLP99, _MLP999, 
+     ConnectionTimeouts] = Row,
+    {HSMean, MLMean, ConnectionTimeouts}.
+
+connection_timeouts(Root) ->
+    {ok, FH} = file:open(filename:join(Root, "counts.csv"), [read]),
+    % toss the header
+    io:get_line(FH, ""),
+    Line = io:get_line(FH, ""),
+    [_, _, _, Timeouts|_Rest] = string:tokens(Line, ","),
+    list_to_integer(Timeouts).
+
+main(Filenames) ->
+    code:add_paths([
+                    "ebin",
+                    "deps/erlydtl/ebin"
+                    ]),
+
+    compile_template(),
+
+    Rows = lists:map(fun(Root) ->
+                             HistogramFN = filename:join(Root, "histogram.config"),
+                             {ok, [{ServerName, Histograms}]} = file:consult(HistogramFN),
+                             ConnectionTimeouts = connection_timeouts(Root),
+                             columns(ServerName, Histograms, ConnectionTimeouts)
+                     end, Filenames),
+
+    SortedRows = lists:sort(fun(X,Y) -> row_score(X) >= row_score(Y) end, Rows),
+
+    Context = [{rows, SortedRows}],
+    {ok, HTML} = histogram_tmpl:render(Context),
+
+    io:format("~s~n", [HTML]).
+
