@@ -1,0 +1,80 @@
+#!/usr/bin/env escript
+%% -*- erlang -*-
+%%! -smp enable
+-mode(compile).
+
+row_reduce({eof}, MetricName) ->
+    MetricName;
+row_reduce({newline, Row}, MetricName) ->
+    [_Type, _TS, ElapsedStr] = Row,
+    Elapsed = list_to_integer(ElapsedStr),
+    folsom_metrics:notify({MetricName, Elapsed}),
+    MetricName.
+
+compile_csv(MetricName, CSVFile) ->
+    {ok, IoDevice} = file:open(CSVFile, [read]),
+    % pop off the header
+    io:get_line(IoDevice, ""),
+    {ok, MetricName} = ecsv:process_csv_file_with(IoDevice,
+                                                  fun row_reduce/2,
+                                                  MetricName),
+    ok.
+
+process_framework(Root) ->
+    Framework = filename:basename(Root),
+    
+    folsom_metrics:new_histogram({Framework, handshake_times}),
+    folsom_metrics:new_histogram({Framework, message_latencies}),
+
+    ok = compile_csv({Framework, handshake_times},
+                     filename:join(Root, "handshake_times.csv")),
+    ok = compile_csv({Framework, message_latencies},
+                     filename:join(Root, "message_latencies.csv")),
+
+    {ok, HistogramFH} = file:open(filename:join(Root, "histogram.config"),
+                                  [write]),
+    HistogramData = [
+                     {handshake_times, 
+                      folsom_metrics:get_histogram_statistics(
+                        {Framework, handshake_times})},
+                     {message_latencies,
+                      folsom_metrics:get_histogram_statistics(
+                        {Framework, message_latencies})}
+                     ],
+    io:format(HistogramFH, "~w.", [{Framework, HistogramData}]),
+    ok = file:close(HistogramFH),
+
+    folsom_metrics:delete_metric({Framework, handshake_times}),
+    folsom_metrics:delete_metric({Framework, message_latencies}),
+    ok.
+
+main(Roots) ->
+    code:add_paths([
+                    "deps/ecsv/ebin",
+                    "deps/bear/ebin",
+                    "deps/folsom/ebin"]),
+    
+    application:start(folsom),
+
+    
+    pmap(fun process_framework/1, Roots).
+
+pmap(F, L) ->
+  Parent = self(), 
+  pmap_results(
+    lists:foldl(
+      fun(X, I) -> 
+        spawn_link(fun() -> Parent ! {pmap, {I, F(X)}} end), 
+        I + 1 
+      end,
+      0,  
+      L
+    ),
+    []
+  ).
+ 
+pmap_results(0, Rs) ->
+  lists:map(fun({_, R}) -> R end, lists:keysort(1, Rs));
+ 
+pmap_results(N, Rs) ->
+  pmap_results(N - 1, receive {pmap, R} -> [R|Rs] end).
