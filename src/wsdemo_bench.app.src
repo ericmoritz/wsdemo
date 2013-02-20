@@ -19,6 +19,7 @@
                     "erlang-cowboy",
                     "go-gonet",
                     "haskell-snap",
+                    "java-netty4",
                     "java-webbit",
                     "node-ws",
                     "node-ws-cluster",

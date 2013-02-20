@@ -17,6 +17,7 @@ individual Websocket projects and wsdemo implementations:
  * Jeffery Gelens      - For the gevent-websocket project <https://bitbucket.org/Jeffrey/gevent-websocket/>
  * Joe Walnes          - For the Webbit project <http://webbitserver.org/>
  * Loïc Hoguin and Nine Nines - For the Erlang cowboy project <https://github.com/extend/cowboy>
+ * Norman Marer        - For the Netty project <http://netty.io>
  * The Snap team       - For the Haskell Snap framework <http://snapframework.com/>
  * The Tornado team    - For the tornado.websocket module <http://www.tornadoweb.org/>
  * The go team         - For the net/websockets code <http://code.google.com/p/go/source/checkout?repo=net>
