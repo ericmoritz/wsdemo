@@ -11,12 +11,14 @@
 competition/cljwsdemo/target/
 competition/log/*.log
 competition/node_modules
+competition/node-v0.8.21/
+
 competition/wsdemo-snap
 competition/wsdemo-go-gonet
 competition/pypy-1.9
 competition/supervisord.pid
 competition/wsdemo-go-gonet
-competition/play-2.0.1*
+competition/play-2.0.1/
 competition/wsdemo-playframework-2/project/target/
 competition/wsdemo-playframework-2/target/
 competition/wsdemo-playframework-2/wsdemo-1.0-SNAPSHOT/
